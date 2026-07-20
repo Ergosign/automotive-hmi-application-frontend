@@ -1,0 +1,116 @@
+image: gitlab.ergosign-projects.com:5050/ergosign/docker-images/ergosign-node/18:2.1.0
+
+
+variables:
+  # mandatory
+  DEPLOY_BRANCH__SUBDOMAIN_NAME: stadt-up-frontend # set to the configured subdomain
+  DEPLOY_BRANCH__DOCKER_CONTAINER_PORT: 56870 # set to the port to which the subdomain maps
+  DEPLOY_BRANCH__DEPLOY_CONTENT_PATH: ./web/.webpack # set to the folder that should be made available in the deployment
+  # optional
+  DEPLOY_BRANCH__TARGET_SERVER: dev # set to the target stage of the deployment. allowed values are 'dev', 'staging' and 'live'
+  # should not be changed
+  DEPLOY_BRANCH__DOCKER_DEPLOY_IMAGE: gitlab.ergosign-projects.com:5050/ergosign/docker-images/ergosign-nginx-docker:1.5.7
+  DEPLOY_BRANCH__DOCKER_CONTAINER_WEB_ROOT_PATH: /usr/share/nginx/html
+  DEPLOY_BRANCH__DOCKER_CONTAINER_INTERNAL_PORT: 80
+  DEPLOY_BRANCH__DOCKER_CONTAINER_NAME: $CI_PROJECT_NAME-branches
+
+include:
+  - project: 'ergosign/gitlab-templates'
+    file:
+      - '/deploy/jobs/.deploy-branch.yml'
+      - '/deploy/jobs/.remove-branch.yml'
+
+stages:
+  - install_dependencies
+  - push
+  - build
+  - push_docker
+  - deploy
+#  - deploy-staging
+
+#####################################
+# DOCKER CACHE
+#####################################
+.docker-cache: &docker-cache
+  rules:
+    - changes:
+      - yarn.lock
+    - if: '($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "development" || $CI_PIPELINE_SOURCE == "merge_request_event")'
+#      when: manual
+#    - when: manual
+
+create docker cache:
+  <<: *docker-cache
+  stage: install_dependencies
+  tags:
+    - docker-build
+  script:
+    - docker build -f Dockerfile.yarncache .
+
+push docker cache:
+  <<: *docker-cache
+  stage: push
+  tags:
+    - docker-build
+  dependencies:
+    - create docker cache
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:yarn-cache
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -f Dockerfile.yarncache -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+
+build frontend:
+  stage: build
+  image: $CI_REGISTRY_IMAGE:yarn-cache
+  script:
+    - echo "building project with ID $CI_BUILD_REF"
+    - ln -s /home/app/node_modules $PWD/node_modules
+    - yarn web:build:prod
+  rules:
+    - if: '($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "development" || $CI_PIPELINE_SOURCE == "merge_request_event")'
+  artifacts:
+    paths:
+      - web/.webpack/
+    expire_in: 5 days
+
+build-docker:
+  stage: push_docker
+  tags:
+    - docker-build
+  variables:
+    REGISTRY_DEPLOYMENT: $CI_REGISTRY/stadt-up/stadt-up-deployment
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:nginx
+    IMAGE_TAG_DEPLOYMENT: $CI_REGISTRY_DEPLOYMENT_IMAGE:nginx
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -f nginx/Dockerfile -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+    - docker build -f nginx/Dockerfile -t $IMAGE_TAG_DEPLOYMENT .
+    - docker login -u $CI_DEPLOYMENT_USER -p $CI_DEPLOYMENT_TOKEN $REGISTRY_DEPLOYMENT
+    - docker push $IMAGE_TAG_DEPLOYMENT
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "development" || $CI_COMMIT_BRANCH == "deployment"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"'
+      when: always
+    - when: never
+
+Deploy branch:
+  extends: .deploy-branch
+  environment:
+    on_stop: Remove branch
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "development"  || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: manual
+    - when: never
+
+Remove branch:
+  extends: .remove-branch
+  rules:
+#    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+#      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "development" || $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: manual
+    - when: never
