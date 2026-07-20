@@ -61,7 +61,6 @@ type Props = {
 
 function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   const crash = useCrash();
-
   const forwardedAnalytics = useForwardAnalytics();
   const boundInitPanel = useMemo(
     () =>
@@ -76,12 +75,14 @@ function ThreeDeeRenderAdapter(interfaceMode: InterfaceMode, props: Props) {
   );
 
   return (
-    <PanelExtensionAdapter
-      config={props.config}
-      highestSupportedConfigVersion={1}
-      saveConfig={props.saveConfig}
-      initPanel={boundInitPanel}
-    />
+    <>
+      <PanelExtensionAdapter
+        config={props.config}
+        highestSupportedConfigVersion={1}
+        saveConfig={props.saveConfig}
+        initPanel={boundInitPanel}
+      />
+    </>
   );
 }
 

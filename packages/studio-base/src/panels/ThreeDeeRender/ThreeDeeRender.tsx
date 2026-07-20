@@ -2,12 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { produce } from "immer";
 import * as _ from "lodash-es";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactDOM from "react-dom";
+import { useTranslation } from "react-i18next";
 import { useLatest } from "react-use";
 import { DeepPartial } from "ts-essentials";
+import { makeStyles } from "tss-react/mui";
 import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
@@ -25,8 +34,13 @@ import {
 } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { BuiltinPanelExtensionContext } from "@foxglove/studio-base/components/PanelExtensionAdapter";
-import { ALL_SUPPORTED_IMAGE_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/ImageMode";
-import { ALL_SUPPORTED_ANNOTATION_SCHEMAS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/ImageMode/annotations/ImageAnnotations";
+// import { useNodeVisibilityStore } from "@foxglove/studio-base/stores/useNodeVisibilityStore";
+import { UserInfo } from "@foxglove/studio-base/components/UserInfo";
+import {
+  RecordingInfo,
+  useRecordingInfoStore,
+} from "@foxglove/studio-base/stores/useRecordingInfoStore";
+import { ISystemInfo, useSystemInfoStore } from "@foxglove/studio-base/stores/useSystemInfoStore";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import type {
@@ -63,12 +77,20 @@ type Shared3DPanelState = {
   followTf: undefined | string;
 };
 
-const PANEL_STYLE: React.CSSProperties = {
-  width: "100%",
-  height: "100%",
-  display: "flex",
-  position: "relative",
-};
+const useStyles = makeStyles()((theme) => ({
+  panel: {
+    height: "100%",
+    position: "relative",
+  },
+
+  userInfoWrapper: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    background: "#000",
+    padding: theme.spacing(2),
+  },
+}));
 
 function useRendererProperty<K extends keyof IRenderer>(
   renderer: IRenderer | undefined,
@@ -94,6 +116,22 @@ function useRendererProperty<K extends keyof IRenderer>(
   return value;
 }
 
+const ThreeDeePanelWrapper = ({
+  onKeyDown,
+  children,
+}: {
+  children: ReactNode;
+  onKeyDown: (event: React.KeyboardEvent) => void;
+}): JSX.Element => {
+  const { classes } = useStyles();
+
+  return (
+    <div className={classes.panel} onKeyDown={onKeyDown}>
+      {children}
+    </div>
+  );
+};
+
 /**
  * A panel that renders a 3D scene. This is a thin wrapper around a `Renderer` instance.
  */
@@ -107,6 +145,10 @@ export function ThreeDeeRender(props: {
 }): JSX.Element {
   const { context, interfaceMode, onDownloadImage, debugPicking } = props;
   const { initialState, saveState, unstable_fetchAsset: fetchAsset } = context;
+  const { setRecordingInfo } = useRecordingInfoStore();
+  const { setSystemInfo } = useSystemInfoStore();
+  const { t } = useTranslation("panels");
+  const { classes } = useStyles();
 
   // Load and save the persisted panel configuration
   const [config, setConfig] = useState<Immutable<RendererConfig>>(() => {
@@ -164,48 +206,42 @@ export function ThreeDeeRender(props: {
     debugPicking,
   ]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     context.EXPERIMENTAL_setMessagePathDropConfig({
-      getDropStatus(paths) {
+      getDropStatus(path) {
         if (interfaceMode !== "image") {
           return { canDrop: false };
         }
-        let effect: "add" | "replace" = "add";
-        for (const path of paths) {
-          if (!path.isTopic || path.rootSchemaName == undefined) {
-            return { canDrop: false };
-          }
-          if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
-            effect = "replace";
-          } else if (ALL_SUPPORTED_ANNOTATION_SCHEMAS.has(path.rootSchemaName)) {
-            // nothing to do
-          } else {
-            return { canDrop: false };
-          }
+        if (!path.isTopic || path.rootSchemaName == undefined) {
+          return { canDrop: false };
         }
-        return { canDrop: true, effect };
+        if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
+          return { canDrop: true, effect: "replace" };
+        }
+        if (ALL_SUPPORTED_ANNOTATION_SCHEMAS.has(path.rootSchemaName)) {
+          return { canDrop: true, effect: "add" };
+        }
+        return { canDrop: false };
       },
-      handleDrop(paths) {
+      handleDrop(path) {
         setConfig((prevConfig) =>
           produce(prevConfig, (draft) => {
-            for (const path of paths) {
-              if (path.rootSchemaName == undefined) {
-                continue;
-              }
-              if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
-                draft.imageMode.imageTopic = path.path;
-              } else {
-                draft.imageMode.annotations ??= {};
-                draft.imageMode.annotations[path.path] ??= {};
-                draft.imageMode.annotations[path.path]!.visible = true;
-              }
+            if (path.rootSchemaName == undefined) {
+              return;
+            }
+            if (ALL_SUPPORTED_IMAGE_SCHEMAS.has(path.rootSchemaName)) {
+              draft.imageMode.imageTopic = path.path;
+            } else {
+              draft.imageMode.annotations ??= {};
+              draft.imageMode.annotations[path.path] ??= {};
+              draft.imageMode.annotations[path.path]!.visible = true;
             }
           }),
         );
       },
     });
   }, [context, interfaceMode]);
-
+ */
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [timezone, setTimezone] = useState<string | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
@@ -363,6 +399,7 @@ export function ThreeDeeRender(props: {
     if (interfaceMode === "image") {
       context.setDefaultPanelTitle(config.imageMode.imageTopic);
     }
+    // PublishEnabledEditingOff;
   }, [interfaceMode, context, config.imageMode.imageTopic]);
 
   // Establish a connection to the message pipeline with context.watch and context.onRender
@@ -373,6 +410,25 @@ export function ThreeDeeRender(props: {
           setCurrentTime(renderState.currentTime);
         }
 
+        // Checking if system_info is subscribed.
+        const systemInfo = renderState.currentFrame?.find((item) => item.topic === "/system_info");
+
+        if (systemInfo != undefined) {
+          const message = systemInfo.message as ISystemInfo;
+          setSystemInfo({
+            storage_space: message.storage_space,
+          });
+        }
+
+        // Checking if recording_info is subscribed.
+        const recordingInfo = renderState.currentFrame?.find(
+          (item) => item.topic === "/recording_info",
+        );
+
+        if (recordingInfo != undefined) {
+          const message = recordingInfo.message as RecordingInfo;
+          setRecordingInfo(message);
+        }
         // Check if didSeek is set to true to reset the preloadedMessageTime and
         // trigger a state flush in Renderer
         if (renderState.didSeek === true) {
@@ -418,7 +474,7 @@ export function ThreeDeeRender(props: {
     context.watch("topics");
     context.watch("appSettings");
     context.subscribeAppSettings([AppSetting.TIMEZONE]);
-  }, [context, renderer]);
+  }, [context, renderer, setRecordingInfo, setSystemInfo]);
 
   // Build a list of topics to subscribe to
   const [topicsToSubscribe, setTopicsToSubscribe] = useState<Subscription[] | undefined>(undefined);
@@ -428,7 +484,8 @@ export function ThreeDeeRender(props: {
       return;
     }
 
-    const newSubscriptions: Subscription[] = [];
+    // Always subsbribe to /recording_info to track recording status.
+    const newSubscriptions: Subscription[] = [{ topic: "/recording_info" }];
 
     const addSubscription = (
       topic: Topic,
@@ -491,7 +548,9 @@ export function ThreeDeeRender(props: {
     if (!topicsToSubscribe) {
       return;
     }
-    log.debug(`Subscribing to [${topicsToSubscribe.map((t) => JSON.stringify(t)).join(", ")}]`);
+    log.debug(
+      `Subscribing to [${topicsToSubscribe.map((topic) => JSON.stringify(topic)).join(", ")}]`,
+    );
     context.subscribe(topicsToSubscribe);
   }, [context, topicsToSubscribe]);
 
@@ -501,6 +560,19 @@ export function ThreeDeeRender(props: {
       renderer.setParameters(parameters);
     }
   }, [parameters, renderer]);
+
+  // const nodeVisibilityStore = useNodeVisibilityStore();
+
+  // Init setting node visibility
+  // useEffect(() => {
+  //   for (const path of nodeVisibilityStore.visibleNodes) {
+  //     const pathArr = path.split(" ");
+  //     actionHandler({
+  //       action: "update",
+  //       payload: { input: "boolean", path: [...pathArr, "visible"], value: true },
+  //     });
+  //   }
+  // }, [actionHandler, nodeVisibilityStore.visibleNodes]);
 
   // Keep the renderer currentTime up to date and handle seeking
   useEffect(() => {
@@ -748,15 +820,6 @@ export function ThreeDeeRender(props: {
     renderer?.publishClickTool,
   ]);
 
-  const onClickPublish = useCallback(() => {
-    if (publishActive) {
-      renderer?.publishClickTool.stop();
-    } else {
-      renderer?.publishClickTool.start();
-      renderer?.measurementTool.stopMeasuring();
-    }
-  }, [publishActive, renderer]);
-
   const onTogglePerspective = useCallback(() => {
     const currentState = renderer?.getCameraState()?.perspective ?? false;
     actionHandler({
@@ -781,13 +844,14 @@ export function ThreeDeeRender(props: {
   );
 
   // The 3d panel only supports publishing to ros1 and ros2 data sources
-  const isRosDataSource =
-    context.dataSourceProfile === "ros1" || context.dataSourceProfile === "ros2";
-  const canPublish = context.publish != undefined && isRosDataSource;
+  /* const isRosDataSource =
+    context.dataSourceProfile === "ros1" || context.dataSourceProfile === "ros2"; */
+
+  //const canPublish = context.publish != undefined && isRosDataSource;
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
-      <div style={PANEL_STYLE} onKeyDown={onKeyDown}>
+      <ThreeDeePanelWrapper onKeyDown={onKeyDown}>
         <canvas
           ref={setCanvas}
           style={{
@@ -802,24 +866,30 @@ export function ThreeDeeRender(props: {
             interfaceMode={interfaceMode}
             canvas={canvas}
             addPanel={addPanel}
-            enableStats={config.scene.enableStats ?? false}
+            //enableStats={config.scene.enableStats ?? false}
             perspective={config.cameraState.perspective}
             onTogglePerspective={onTogglePerspective}
             measureActive={measureActive}
             onClickMeasure={onClickMeasure}
-            canPublish={canPublish}
-            publishActive={publishActive}
-            onClickPublish={onClickPublish}
-            publishClickType={renderer?.publishClickTool.publishClickType ?? "point"}
-            onChangePublishClickType={(type) => {
-              renderer?.publishClickTool.setPublishClickType(type);
-              renderer?.publishClickTool.start();
-            }}
+            //canPublish={canPublish}
+            //publishActive={publishActive}
+            //onClickPublish={onClickPublish}
+            //publishClickType={renderer?.publishClickTool.publishClickType ?? "point"}
+            // onChangePublishClickType={(type) => {
+            //   renderer?.publishClickTool.setPublishClickType(type);
+            //   renderer?.publishClickTool.start();
+            // }}
             timezone={timezone}
             onDownloadImage={onDownloadImage}
+            panelId={context.panelElement.id}
           />
+          {interfaceMode === "image" && config.imageMode.imageTopic == undefined && (
+            <div className={classes.userInfoWrapper}>
+              <UserInfo>{t("noSetupSelected")}</UserInfo>
+            </div>
+          )}
         </RendererContext.Provider>
-      </div>
+      </ThreeDeePanelWrapper>
     </ThemeProvider>
   );
 }

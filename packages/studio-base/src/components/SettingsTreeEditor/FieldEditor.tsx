@@ -22,6 +22,12 @@ import { v4 as uuid } from "uuid";
 import { Immutable, SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { colorLabels, getRgbFromRgba } from "@foxglove/studio-base/util/colorUtils";
+import {
+  mono_14px_500,
+  serif_12px_400,
+  serif_14px_500,
+} from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { ColorGradientInput, ColorPickerInput, NumberInput, Vec2Input, Vec3Input } from "./inputs";
 
@@ -54,10 +60,14 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
     },
     error: {},
     fieldLabel: {
-      color: theme.palette.text.secondary,
+      ...serif_12px_400,
+      color: theme.palette.greys["dadada"],
       overflow: "hidden",
       textOverflow: "ellipsis",
       whiteSpace: "nowrap",
+    },
+    disabled: {
+      color: theme.palette.greys["878787"],
     },
     fieldWrapper: {
       minWidth: theme.spacing(14),
@@ -96,32 +106,136 @@ const useStyles = makeStyles<void, "error">()((theme, _params, classes) => {
       },
     },
     styledToggleButtonGroup: {
-      backgroundColor: theme.palette.action.hover,
-      gap: theme.spacing(0.25),
+      height: theme.spacing(4),
+      padding: theme.spacing(0.25),
+      background: theme.palette.greys[454545],
       overflowX: "auto",
 
       "& .MuiToggleButtonGroup-grouped": {
-        margin: theme.spacing(0.55),
-        borderRadius: theme.shape.borderRadius,
-        paddingTop: 0,
-        paddingBottom: 0,
-        borderColor: "transparent !important",
+        ...serif_14px_500,
+
+        padding: `0 ${theme.spacing(1)}`,
+        margin: "0 !important",
+        border: "none !important",
         lineHeight: 1.75,
+        color: theme.palette.greys.b2b2b2,
+
+        "&:hover": {
+          background: "none",
+        },
 
         "&.Mui-selected": {
-          background: theme.palette.background.paper,
-          borderColor: "transparent",
+          borderRadius: theme.spacing(0.125),
+          color: theme.palette.greys.black,
+        },
 
-          "&:hover": {
-            borderColor: theme.palette.action.active,
+        "&:not(:first-of-type)": {
+          "&.Mui-selected": {
+            background: theme.palette.key.cyan.main,
           },
         },
-        "&:not(:first-of-type)": {
-          borderRadius: theme.shape.borderRadius,
-        },
         "&:first-of-type": {
-          borderRadius: theme.shape.borderRadius,
+          "&.Mui-selected": {
+            background: theme.palette.greys.b2b2b2,
+          },
         },
+      },
+    },
+
+    dropDown: {
+      background: theme.palette.greys[454545],
+
+      "&:hover, &.Mui-focused": {
+        background: theme.palette.greys[454545],
+      },
+
+      "&:has(.MuiSelect-iconOpen)": {
+        outline: `1px solid ${theme.palette.greys.white}`,
+        outlineOffset: "-1px",
+      },
+
+      ".MuiSelect-select": {
+        ...serif_14px_500,
+
+        minHeight: "unset",
+      },
+
+      ".MuiSvgIcon-root": {
+        width: theme.spacing(3),
+        height: theme.spacing(3),
+        top: "unset",
+        right: theme.spacing(1),
+      },
+    },
+
+    menuList: {
+      background: theme.palette.greys[454545],
+
+      ".MuiMenuItem-root": {
+        ...serif_14px_500,
+
+        padding: theme.spacing(1),
+      },
+
+      ".Mui-selected": {
+        background: `${theme.palette.greys["878787"]} !important`,
+      },
+    },
+
+    menuItem: {
+      display: "flex",
+      alignItems: "center",
+      gap: theme.spacing(1),
+    },
+
+    colorPreview: {
+      minWidth: "14px",
+      minHeight: "14px",
+      borderRadius: "100%",
+    },
+
+    numberInput: {
+      ".MuiInputBase-root": {
+        background: theme.palette.greys[454545],
+        padding: 0,
+      },
+
+      ".MuiInputBase-input": {
+        ...mono_14px_500,
+        padding: 0,
+      },
+
+      ".MuiIconButton-root": {
+        visibility: "visible",
+        padding: `${theme.spacing(0.75)} ${theme.spacing(0.25)}`,
+        margin: 0,
+
+        ".MuiSvgIcon-root": {
+          width: theme.spacing(3),
+          height: theme.spacing(3),
+        },
+      },
+    },
+
+    textField: {
+      ".MuiInputBase-root": {
+        ...serif_14px_500,
+
+        height: theme.spacing(4.5),
+        padding: `${theme.spacing(1)} ${theme.spacing(1.25)}`,
+        background: theme.palette.greys[454545],
+      },
+
+      ".MuiInputBase-input": {
+        padding: 0,
+      },
+    },
+
+    colorPicker: {
+      ".MuiInputBase-root": {
+        height: theme.spacing(4.5),
+        padding: `${theme.spacing(1)} ${theme.spacing(1.25)}`,
+        background: theme.palette.greys[454545],
       },
     },
   };
@@ -182,6 +296,7 @@ function FieldInput({
     case "number":
       return (
         <NumberInput
+          className={classes.numberInput}
           size="small"
           variant="filled"
           value={field.value}
@@ -233,6 +348,7 @@ function FieldInput({
     case "string":
       return (
         <TextField
+          className={classes.textField}
           variant="filled"
           size="small"
           fullWidth
@@ -275,6 +391,7 @@ function FieldInput({
     case "rgb":
       return (
         <ColorPickerInput
+          className={classes.colorPicker}
           alphaType="none"
           disabled={field.disabled}
           readOnly={field.readonly}
@@ -291,19 +408,54 @@ function FieldInput({
       );
     case "rgba":
       return (
-        <ColorPickerInput
-          alphaType="alpha"
+        <Select
+          className={cx(classes.dropDown)}
+          displayEmpty
+          fullWidth
           disabled={field.disabled}
           readOnly={field.readonly}
-          placeholder={field.placeholder}
-          value={field.value?.toString()}
-          onChange={(value) => {
+          variant="filled"
+          value={field.value ?? ""}
+          placeholder="Default"
+          renderValue={(value) => {
+            if (!value) {
+              return "Default";
+            }
+
+            const valueStr = value.toString();
+            // Return the color preview and label, similar to MenuItem
+            return (
+              <div className={classes.menuItem}>
+                <span
+                  className={classes.colorPreview}
+                  style={{ background: getRgbFromRgba(valueStr) }}
+                />
+                <span>{colorLabels[valueStr] ?? "Default"}</span>
+              </div>
+            );
+          }}
+          onChange={(event) => {
             actionHandler({
               action: "update",
-              payload: { path, input: "rgba", value },
+              payload: {
+                path,
+                input: "rgba",
+                value: event.target.value,
+              },
             });
           }}
-        />
+          MenuProps={{ MenuListProps: { className: classes.menuList, dense: true } }}
+        >
+          {Object.entries(colorLabels).map(([value, label]) => (
+            <MenuItem key={value} className={classes.menuItem} value={value}>
+              <span
+                className={classes.colorPreview}
+                style={{ background: getRgbFromRgba(value) }}
+              />
+              <span>{label}</span>
+            </MenuItem>
+          ))}
+        </Select>
       );
     case "messagepath":
       return (
@@ -341,8 +493,7 @@ function FieldInput({
       const hasError = !selectedOption && (!isEmpty || field.value != undefined);
       return (
         <Select
-          className={cx({ [classes.error]: hasError })}
-          size="small"
+          className={cx(classes.dropDown, { [classes.error]: hasError })}
           displayEmpty
           fullWidth
           disabled={field.disabled}
@@ -373,7 +524,7 @@ function FieldInput({
               },
             });
           }}
-          MenuProps={{ MenuListProps: { dense: true } }}
+          MenuProps={{ MenuListProps: { className: classes.menuList, dense: true } }}
         >
           {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE, disabled }) => (
             <MenuItem key={value} value={value} disabled={disabled}>
@@ -434,7 +585,7 @@ function FieldInput({
 }
 
 function FieldLabel({ field }: { field: Immutable<SettingsTreeField> }): JSX.Element {
-  const { classes } = useStyles();
+  const { classes, cx } = useStyles();
 
   if (field.input === "vec2") {
     const labels = field.labels ?? ["X", "Y"];
@@ -498,17 +649,54 @@ function FieldLabel({ field }: { field: Immutable<SettingsTreeField> }): JSX.Ele
     );
   } else {
     return (
-      <>
-        <Typography
-          className={classes.fieldLabel}
-          title={field.help ?? field.label}
-          variant="subtitle2"
-        >
-          {field.label}
-        </Typography>
-      </>
+      <Typography
+        className={cx(classes.fieldLabel, { [classes.disabled]: field.disabled })}
+        title={field.help ?? field.label}
+      >
+        {field.label}
+      </Typography>
     );
   }
+}
+
+// Own Node editor
+function CustomFieldEditorComponent({
+  actionHandler,
+  field,
+  path,
+}: {
+  actionHandler: (action: SettingsTreeAction) => void;
+  field: Immutable<SettingsTreeField>;
+  path: readonly string[];
+}): JSX.Element {
+  const { classes, cx } = useStyles();
+
+  const displayValue = field.renderValue ? field.renderValue() : field.value;
+
+  return (
+    <>
+      <Stack direction="row" alignItems="center" gap={0.5} fullHeight>
+        <FieldLabel field={field} />
+        {field.error && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={<Typography variant="subtitle2">{field.error}</Typography>}
+          >
+            <ErrorIcon color="error" fontSize="small" />
+          </Tooltip>
+        )}
+      </Stack>
+
+      <div className={cx(classes.fieldWrapper, { [classes.error]: field.error != undefined })}>
+        {field.readonly === true ? (
+          <span>{displayValue}</span>
+        ) : (
+          <FieldInput actionHandler={actionHandler} field={field} path={path} />
+        )}
+      </div>
+    </>
+  );
 }
 
 function FieldEditorComponent({
@@ -553,4 +741,5 @@ function FieldEditorComponent({
   );
 }
 
+export const CustomFieldEditor = React.memo(CustomFieldEditorComponent);
 export const FieldEditor = React.memo(FieldEditorComponent);

@@ -4,16 +4,18 @@
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CheckIcon from "@mui/icons-material/Check";
-import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Button, Menu } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { makeStyles } from "tss-react/mui";
 
+import { MenuItem } from "@foxglove/studio-base/components/MenuItem";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import {
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { serif_14px_400 } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const SPEED_OPTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.8, 1, 2, 3, 5];
 
@@ -24,12 +26,22 @@ const configSpeedSelector = (state: LayoutState) =>
 
 const useStyles = makeStyles()((theme) => ({
   button: {
-    padding: theme.spacing(0.625, 0.5),
+    height: "48px",
+    padding: "12px",
+    boxSizing: "border-box",
     backgroundColor: "transparent",
+    ...serif_14px_400,
 
     ":hover": {
       backgroundColor: theme.palette.action.hover,
     },
+  },
+  checkIconWrapper: {
+    width: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    marginRight: theme.spacing(1),
   },
 }));
 
@@ -107,22 +119,17 @@ export default function PlaybackSpeedControls(): JSX.Element {
         {SPEED_OPTIONS.map((option) => (
           <MenuItem
             selected={displayedSpeed === option}
+            highlightSelected
             key={option}
             onClick={() => {
               setSpeed(option);
               handleClose();
             }}
           >
-            {displayedSpeed === option && (
-              <ListItemIcon>
-                <CheckIcon fontSize="small" />
-              </ListItemIcon>
-            )}
-            <ListItemText
-              inset={displayedSpeed !== option}
-              primary={formatSpeed(option)}
-              primaryTypographyProps={{ variant: "inherit" }}
-            />
+            <div className={classes.checkIconWrapper}>
+              {displayedSpeed === option && <CheckIcon fontSize="small" />}
+            </div>
+            {formatSpeed(option)}
           </MenuItem>
         ))}
       </Menu>

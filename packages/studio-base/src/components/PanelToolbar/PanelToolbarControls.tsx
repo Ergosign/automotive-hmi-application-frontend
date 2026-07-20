@@ -11,67 +11,87 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import SettingsIcon from "@mui/icons-material/Settings";
-import { forwardRef, useCallback, useContext, useMemo } from "react";
+// import SettingsIcon from "@mui/icons-material/Settings";
+import { forwardRef, useContext, useEffect } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+// import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import PanelCatalogContext from "@foxglove/studio-base/context/PanelCatalogContext";
-import {
-  PanelStateStore,
-  usePanelStateStore,
-} from "@foxglove/studio-base/context/PanelStateContext";
-import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
+import { useRecording } from "@foxglove/studio-base/hooks/useRecording";
+import { useNavigationStore } from "@foxglove/studio-base/stores/useNavigationStore";
+// import PanelCatalogContext from "@foxglove/studio-base/context/PanelCatalogContext";
+// import {
+//   PanelStateStore,
+//   usePanelStateStore,
+// } from "@foxglove/studio-base/context/PanelStateContext";
+// import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 
-import { PanelActionsDropdown } from "./PanelActionsDropdown";
+// import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
 type PanelToolbarControlsProps = {
   additionalIcons?: React.ReactNode;
-  isUnknownPanel: boolean;
+  // isUnknownPanel: boolean;
 };
 
 const PanelToolbarControlsComponent = forwardRef<HTMLDivElement, PanelToolbarControlsProps>(
   (props, ref) => {
-    const { additionalIcons, isUnknownPanel } = props;
-    const { id: panelId, type: panelType } = useContext(PanelContext) ?? {};
-    const panelCatalog = useContext(PanelCatalogContext);
+    const { additionalIcons } = props;
+    const { id: panelId, title } = useContext(PanelContext) ?? {};
+    // const panelCatalog = useContext(PanelCatalogContext);
     const { setSelectedPanelIds } = useSelectedPanels();
-    const { openPanelSettings } = useWorkspaceActions();
+    // const { openPanelSettings } = useWorkspaceActions();
+    // const hasSettingsSelector = useCallback(
+    //   (store: PanelStateStore) => (panelId ? store.settingsTrees[panelId] != undefined : false),
+    //   [panelId],
+    // );
 
-    const hasSettingsSelector = useCallback(
-      (store: PanelStateStore) => (panelId ? store.settingsTrees[panelId] != undefined : false),
-      [panelId],
-    );
-
-    const panelInfo = useMemo(
+    /* const panelInfo = useMemo(
       () => (panelType != undefined ? panelCatalog?.getPanelByType(panelType) : undefined),
       [panelCatalog, panelType],
-    );
+    ); */
 
-    const hasSettings = usePanelStateStore(hasSettingsSelector);
+    // const hasSettings = usePanelStateStore(hasSettingsSelector);
 
-    const openSettings = useCallback(async () => {
+    /* const openSettings = useCallback(async () => {
       if (panelId) {
-        setSelectedPanelIds([panelId]);
+        // setSelectedPanelIds([panelId]);
         openPanelSettings();
       }
-    }, [panelId, setSelectedPanelIds, openPanelSettings]);
+    }, [panelId, openPanelSettings]); */
+    const recording = useRecording();
+    const { setCurrentPanelTitle } = useNavigationStore();
 
+    // Event used to open settings via a store. Because PanelContext is not available on Some components.
+    useEffect(() => {
+      if (!panelId || !title) {
+        return;
+      }
+
+      setCurrentPanelTitle(title);
+      // recording.closeRecordingToolbar();
+      // setSelectedPanelIds([panelId]);
+    }, [
+      panelId,
+      title,
+      setCurrentPanelTitle,
+      recording.closeRecordingToolbar,
+      setSelectedPanelIds,
+    ]);
     // Show the settings button so that panel title is editable, unless we have a custom
     // toolbar in which case the title wouldn't be visible.
-    const showSettingsButton = panelInfo?.hasCustomToolbar !== true || hasSettings;
+    // const showSettingsButton = panelInfo?.hasCustomToolbar !== true || hasSettings;
 
     return (
       <Stack direction="row" alignItems="center" paddingLeft={1} ref={ref}>
         {additionalIcons}
-        {showSettingsButton && (
+        {/* {showSettingsButton && (
           <ToolbarIconButton title="Settings" onClick={openSettings}>
             <SettingsIcon />
           </ToolbarIconButton>
-        )}
-        <PanelActionsDropdown isUnknownPanel={isUnknownPanel} />
+        )} */}
+        {/*         <PanelActionsDropdown isUnknownPanel={isUnknownPanel} />
+         */}
       </Stack>
     );
   },

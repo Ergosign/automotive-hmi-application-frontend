@@ -73,7 +73,7 @@ export const ALL_SUPPORTED_IMAGE_SCHEMAS = new Set([
   ...COMPRESSED_IMAGE_DATATYPES,
 ]);
 
-const ALL_SUPPORTED_CALIBRATION_SCHEMAS = new Set([
+export const ALL_SUPPORTED_CALIBRATION_SCHEMAS = new Set([
   ...CAMERA_INFO_DATATYPES,
   ...CAMERA_CALIBRATION_DATATYPES,
 ]);
@@ -311,17 +311,17 @@ export class ImageMode
       return;
     }
 
-    const matchingCalibrationTopic = this.#getMatchingCalibrationTopic(imageTopic.name);
+    // const matchingCalibrationTopic = this.#getMatchingCalibrationTopic(imageTopic.name);
 
     this.renderer.updateConfig((draft) => {
-      draft.imageMode.imageTopic = imageTopic.name;
-      if (matchingCalibrationTopic != undefined) {
-        draft.imageMode.calibrationTopic = matchingCalibrationTopic.name;
-      }
+      draft.imageMode.imageTopic = undefined; //imageTopic.name;
+      // if (matchingCalibrationTopic != undefined) {
+      //   draft.imageMode.calibrationTopic = matchingCalibrationTopic.name;
+      // }
     });
-    if (matchingCalibrationTopic) {
-      this.#setHasCalibrationTopic(true);
-    }
+    // if (matchingCalibrationTopic) {
+    //   this.#setHasCalibrationTopic(true);
+    // }
   };
 
   /** Choose a calibration topic that best matches the given `imageTopic`. */

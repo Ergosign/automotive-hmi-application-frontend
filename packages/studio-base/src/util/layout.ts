@@ -38,6 +38,13 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 
+export enum PanelPosition {
+  MAIN = "main",
+  TOP_LEFT = "topLeft",
+  TOP_CENTER = "topCenter",
+  TOP_RIGHT = "topRight",
+}
+
 const log = Logger.getLogger(__filename);
 
 /** Key injected into panel configs for user-selected title (overrides setDefaultPanelTitle) */
@@ -46,13 +53,44 @@ export const PANEL_TITLE_CONFIG_KEY = "foxglovePanelTitle";
 // given a panel type, create a unique id for a panel
 // with the type embedded within the id
 // we need this because react-mosaic
-export function getPanelIdForType(type: string): string {
+export function getPanelRandomIdForType(type: string): string {
   const factor = 1e10;
   const rnd = Math.round(Math.random() * factor).toString(36);
   // a panel id consists of its type, an exclamation mark for splitting, and a random val
   // because each panel id functions is the react 'key' for the react-mosaic-component layout
   // but also must encode the panel type for panel factory construction
   return `${type}!${rnd}`;
+}
+
+/**
+ * Extracts the position from the panel ID.
+ *
+ * @param panelId The ID of a panel.
+ * @returns The panel position (main, topLeft, topCenter or topRight) or undefined.
+ */
+function getPanelPositionFromId(panelId: string): PanelPosition | undefined {
+  if (!panelId) {
+    return;
+  }
+
+  const position = panelId.split("!")[1];
+  return position as PanelPosition;
+}
+/**
+ * Changes the type of a given panel ID.
+ *
+ * @param panelId The ID of a panel.
+ * @param newType The new type of panel, e.g. 3D or Image.
+ * @returns A panel ID that contains the new panel type.
+ */
+export function getPanelIdForNewType(panelId: string, newType: string): string {
+  const position = getPanelPositionFromId(panelId);
+
+  if (position != undefined) {
+    return `${newType}!${position}`;
+  }
+
+  return newType;
 }
 
 export function getPanelTypeFromId(id: string): string {
@@ -95,7 +133,7 @@ type PanelIdMap = {
 function mapTemplateIdsToNewIds(templateIds: string[]): PanelIdMap {
   const result: PanelIdMap = {};
   for (const id of templateIds) {
-    result[id] = getPanelIdForType(getPanelTypeFromId(id));
+    result[id] = getPanelRandomIdForType(getPanelTypeFromId(id));
   }
   return result;
 }
@@ -109,7 +147,7 @@ function getLayoutWithNewPanelIds(
   if (typeof layout === "string") {
     // return corresponding ID if it exists in panelIdMap
     // (e.g. for Tab panel presets with 1 panel in active layout)
-    return panelIdMap[layout] ?? getPanelIdForType(getPanelTypeFromId(layout));
+    return panelIdMap[layout] ?? getPanelRandomIdForType(getPanelTypeFromId(layout));
   }
 
   if (layout == undefined) {

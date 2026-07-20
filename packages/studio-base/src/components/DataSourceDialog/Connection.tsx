@@ -43,7 +43,7 @@ const useStyles = makeStyles()((theme) => ({
   },
   form: {
     gridArea: "form",
-    overflowY: "auto",
+    overflowY: "hidden",
   },
   formInner: {
     [theme.breakpoints.up("md")]: {

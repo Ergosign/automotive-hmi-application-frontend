@@ -5,13 +5,13 @@ import { useCallback } from "react";
 
 import { PanelSelection } from "@foxglove/studio-base/components/PanelCatalog";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { getPanelIdForType } from "@foxglove/studio-base/util/layout";
+import { getPanelRandomIdForType } from "@foxglove/studio-base/util/layout";
 
 export default function useAddPanel(): (selection: PanelSelection) => void {
   const { addPanel } = useCurrentLayoutActions();
   return useCallback(
     ({ type, config, relatedConfigs }: PanelSelection) => {
-      const id = getPanelIdForType(type);
+      const id = getPanelRandomIdForType(type);
       addPanel({ id, config, relatedConfigs });
     },
     [addPanel],

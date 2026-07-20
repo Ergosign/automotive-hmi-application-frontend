@@ -13,7 +13,7 @@
 
 // No time functions that require `moment` should live in this file.
 import log from "@foxglove/log";
-import { Time } from "@foxglove/rostime";
+import { compare, Time } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage } from "@foxglove/studio-base/types/Messages";
 
@@ -64,3 +64,31 @@ export function getTimestampForMessage(message: unknown): Time | undefined {
 
   return undefined;
 }
+
+/**
+ * Returns true if the left time is greater than or equal to the right time, otherwise false
+ * @param left Left side of the comparison
+ * @param right Right side of the comparison
+ * @returns Comparison result
+ */
+export function isGreaterThanOrEqual(left: Time, right: Time): boolean {
+  return compare(left, right) >= 0;
+}
+
+/**
+ * Removes milliseconds from a string in the format HH:MM:SS:MsMsMs.
+ *
+ * @param time The time string in the format HH:MM:SS:MsMsMs.
+ * @returns The time string in the format HH:MM:SS, without milliseconds.
+ */
+export const removeMilliseconds = (time: string): string => {
+  return time.split(":").slice(0, 3).join(":");
+};
+
+/**
+ * Returns true if both times have the same number of seconds
+ * @param left Left side of the comparison
+ * @param right Right side of the comparison
+ * @returns Equality result
+ */
+export const areSecondsEqual = (left: Time, right: Time): boolean => left.sec === right.sec;

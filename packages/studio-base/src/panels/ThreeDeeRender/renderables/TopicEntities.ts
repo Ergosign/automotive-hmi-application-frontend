@@ -4,6 +4,7 @@
 
 import { toNanoSec } from "@foxglove/rostime";
 import { SceneEntity, SceneEntityDeletion, SceneEntityDeletionType } from "@foxglove/schemas";
+import { SettingsTreeAction } from "@foxglove/studio";
 
 import { PrimitivePool } from "./primitives/PrimitivePool";
 import { RenderableArrows } from "./primitives/RenderableArrows";
@@ -26,6 +27,7 @@ const INVALID_DELETION_TYPE = "INVALID_DELETION_TYPE";
 export type EntityTopicUserData = BaseUserData & {
   topic: string;
   settings: LayerSettingsEntity;
+  actionHandler: (action: SettingsTreeAction) => void;
 };
 
 type EntityRenderables = {
@@ -139,16 +141,19 @@ export class TopicEntities extends Renderable<EntityTopicUserData> {
     for (const primitiveType of ALL_PRIMITIVE_TYPES) {
       const hasPrimitives = entity[PRIMITIVE_KEYS[primitiveType]].length > 0;
       let renderable = renderables[primitiveType];
+
       if (hasPrimitives) {
         if (!renderable) {
           renderable = this.primitivePool.acquire(primitiveType);
-          renderable.name = `${entity.id}:${primitiveType} on ${this.topic}`;
           renderable.userData.settingsPath = this.userData.settingsPath;
+          renderable.userData.actionHandler = this.userData.actionHandler;
+          renderable.name = `${entity.id}:${primitiveType} on ${this.topic}`;
           renderable.setColorScheme(this.renderer.colorScheme);
-          // @ts-expect-error TS doesn't know that renderable matches primitiveType
+          // @ts-expect-error TS doesn't know better
           renderables[primitiveType] = renderable;
           this.add(renderable);
         }
+
         renderable.update(this.userData.topic, entity, this.userData.settings, receiveTime);
       } else if (renderable) {
         this.remove(renderable);

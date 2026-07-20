@@ -2,40 +2,74 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import assert from "assert";
+// import assert from "assert";
 import { useEffect } from "react";
 import { useDebounce } from "use-debounce";
 
-import Log from "@foxglove/log";
+// import Log from "@foxglove/log";
 import {
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
-import { migratePanelsState } from "@foxglove/studio-base/services/migrateLayout";
+// import { LayoutData } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+// import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+// import { defaultLayout } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
+// import { migratePanelsState } from "@foxglove/studio-base/services/migrateLayout";
+import { useLazyApi } from "@foxglove/studio-base/hooks/useLazyApi";
+import { CameraSetups, useCameraStore } from "@foxglove/studio-base/stores/useCameraStore";
+import { Tag, useFlagStore } from "@foxglove/studio-base/stores/useFlagStore";
+import { useLayoutDataStore } from "@foxglove/studio-base/stores/useLayoutDataStore";
 
 function selectLayoutData(state: LayoutState) {
   return state.selectedLayout?.data;
 }
 
-const log = Log.getLogger(__filename);
-
-const KEY = "studio.layout";
-
 export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
-  const { selectedSource } = usePlayerSelection();
-
+  // const { selectedSource } = usePlayerSelection();
+  const { layoutData, setLayoutData } = useLayoutDataStore();
+  const { setCameraSetups } = useCameraStore();
+  const { setTags } = useFlagStore();
   const { setCurrentLayout } = useCurrentLayoutActions();
-  const currentLayoutData = useCurrentLayoutSelector(selectLayoutData);
+
+  const [GetCameraSetups, { data: storedCameraSetups }] = useLazyApi<undefined, CameraSetups>({
+    method: "GET",
+    path: "/get_camera_setups",
+  });
+
+  const [GetTags, { data: storedTags }] = useLazyApi<undefined, Tag[]>({
+    method: "GET",
+    path: "/get_tags",
+  });
 
   useEffect(() => {
-    if (selectedSource?.sampleLayout) {
-      setCurrentLayout({ data: selectedSource.sampleLayout });
+    void GetCameraSetups(undefined);
+  }, [GetCameraSetups]);
+
+  useEffect(() => {
+    void GetTags(undefined);
+  }, [GetTags]);
+
+  useEffect(() => {
+    if (storedCameraSetups != undefined) {
+      setCameraSetups(storedCameraSetups);
     }
-  }, [selectedSource, setCurrentLayout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storedCameraSetups]);
+
+  useEffect(() => {
+    if (storedTags != undefined) {
+      setTags(storedTags);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storedTags]);
+
+  useEffect(() => {
+    setCurrentLayout({ data: layoutData });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const currentLayoutData = useCurrentLayoutSelector(selectLayoutData);
 
   const [debouncedLayoutData] = useDebounce(currentLayoutData, 250, { maxWait: 500 });
 
@@ -44,27 +78,8 @@ export function CurrentLayoutLocalStorageSyncAdapter(): JSX.Element {
       return;
     }
 
-    const serializedLayoutData = JSON.stringify(debouncedLayoutData);
-    assert(serializedLayoutData);
-    localStorage.setItem(KEY, serializedLayoutData);
-  }, [debouncedLayoutData]);
-
-  useEffect(() => {
-    log.debug(`Reading layout from local storage: ${KEY}`);
-
-    const serializedLayoutData = localStorage.getItem(KEY);
-
-    if (serializedLayoutData) {
-      log.debug("Restoring layout from local storage");
-    } else {
-      log.debug("No layout found in local storage. Using default layout.");
-    }
-
-    const layoutData = migratePanelsState(
-      serializedLayoutData ? (JSON.parse(serializedLayoutData) as LayoutData) : defaultLayout,
-    );
-    setCurrentLayout({ data: layoutData });
-  }, [setCurrentLayout]);
+    setLayoutData(debouncedLayoutData);
+  }, [setLayoutData, debouncedLayoutData]);
 
   return <></>;
 }

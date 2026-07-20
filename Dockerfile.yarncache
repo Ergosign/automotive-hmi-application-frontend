@@ -1,0 +1,28 @@
+FROM gitlab.ergosign-projects.com:5050/ergosign/docker-images/ergosign-node/20:3.0.2-beta
+
+WORKDIR /home/app
+
+ADD .yarn .yarn
+ADD benchmark benchmark
+ADD desktop desktop
+ADD packages packages
+ADD patches patches
+ADD web web
+ADD .dockerignore .dockerignore
+ADD .gitattributes .gitattributes
+ADD .yarnrc.yml .yarnrc.yml
+ADD package.json package.json
+ADD yarn.lock yarn.lock
+ADD babel.config.json babel.config.json
+
+USER root
+RUN apt-get update && apt-get install -y git-lfs && apt-get clean
+RUN git lfs install
+#RUN git lfs pull
+RUN corepack enable yarn
+RUN yarn install --immutable
+
+#RUN npm config set prefix "/home/app"
+ENV NODE_PATH=/home/app/node_modules
+
+WORKDIR /usr/src/app

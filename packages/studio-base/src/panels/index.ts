@@ -180,6 +180,22 @@ export const getBuiltin: (t: TFunction<"panels">) => PanelInfo[] = (t) => [
     module: async () => await import("./Tab"),
     hasCustomToolbar: true,
   },
+  {
+    title: "Recordings",
+    type: "Recordings",
+    description: "Recordings",
+    thumbnail: tabThumbnail,
+    module: async () => await import("./Recordings"),
+    hasCustomToolbar: true,
+  },
+  {
+    title: "Settings",
+    type: "Settings",
+    description: "Settings",
+    thumbnail: tabThumbnail,
+    module: async () => await import("./Settings"),
+    hasCustomToolbar: true,
+  },
 ];
 
 export const getDebug: (t: TFunction<"panels">) => PanelInfo[] = (t) => [

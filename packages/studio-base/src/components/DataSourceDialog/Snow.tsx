@@ -103,7 +103,7 @@ export default function Snow({ effect }: { effect: "snow" | "confetti" }): JSX.E
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    const renderer = new THREE.WebGLRenderer({ alpha: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);

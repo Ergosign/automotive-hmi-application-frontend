@@ -10,7 +10,7 @@
     <a href="https://foxglove.dev/join-slack"><img src="https://img.shields.io/badge/chat-slack-purple.svg?logo=slack" /></a>
     <br />
     <br />
-    <a href="https://foxglove.dev/download">Download</a>
+    <a href="https://foxglove.dev/download">Download</a> 
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
     <a href="https://foxglove.dev/docs/studio">Docs</a>
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>

@@ -25,7 +25,7 @@ import {
   DataSourceDialogItem,
 } from "@foxglove/studio-base/components/DataSourceDialog";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
-import { EventsList } from "@foxglove/studio-base/components/EventsList";
+import FlagsList from "@foxglove/studio-base/components/FlagsList/FlagsList";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import {
   MessagePipelineContext,
@@ -36,16 +36,18 @@ import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { ProblemsList } from "@foxglove/studio-base/components/ProblemsList";
+import { RecordingFooter } from "@foxglove/studio-base/components/RecordingFooter/RecordingFooter";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
+import SensorsList from "@foxglove/studio-base/components/SensorsList/SensorsList";
 import { Sidebars, SidebarItem } from "@foxglove/studio-base/components/Sidebars";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { StudioLogsSettings } from "@foxglove/studio-base/components/StudioLogsSettings";
+// import { StudioLogsSettings } from "@foxglove/studio-base/components/StudioLogsSettings";
 import { SyncAdapters } from "@foxglove/studio-base/components/SyncAdapters";
 import { TopicList } from "@foxglove/studio-base/components/TopicList";
-import VariablesList from "@foxglove/studio-base/components/VariablesList";
+import VisualizationsList from "@foxglove/studio-base/components/VisualizationsList/VisualizationsList";
 import { WorkspaceDialogs } from "@foxglove/studio-base/components/WorkspaceDialogs";
 import { useAppContext } from "@foxglove/studio-base/context/AppContext";
-import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { EventsStore, useEvents } from "@foxglove/studio-base/context/EventsContext";
 import { useExtensionCatalog } from "@foxglove/studio-base/context/ExtensionCatalogContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -59,9 +61,16 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useDefaultWebLaunchPreference } from "@foxglove/studio-base/hooks/useDefaultWebLaunchPreference";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
+import { useRecording } from "@foxglove/studio-base/hooks/useRecording";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { View } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import { PanelStateContextProvider } from "@foxglove/studio-base/providers/PanelStateContextProvider";
 import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceContextProvider";
+import { useContextStore } from "@foxglove/studio-base/stores/useContextStore";
+import { useMemoryStore } from "@foxglove/studio-base/stores/useMemoryStore";
+import { useNavigationStore } from "@foxglove/studio-base/stores/useNavigationStore";
+import { useSettingsStore } from "@foxglove/studio-base/stores/useSettingsStore";
+import { useSidebarRightStore } from "@foxglove/studio-base/stores/useSidebarRightStore";
 import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
 
 import { useWorkspaceActions } from "./context/Workspace/useWorkspaceActions";
@@ -98,9 +107,9 @@ const selectIsPlaying = (ctx: MessagePipelineContext) =>
 const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
-const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
+// const selectPlayUntil = (ctx: MessagePipelineContext) => ctx.playUntil;
 const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
-const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
+// const selectEventsSupported = (store: EventsStore) => store.eventsSupported;
 const selectSelectEvent = (store: EventsStore) => store.selectEvent;
 
 const selectWorkspaceDataSourceDialog = (store: WorkspaceContextStore) => store.dialogs.dataSource;
@@ -111,12 +120,22 @@ const selectWorkspaceRightSidebarItem = (store: WorkspaceContextStore) => store.
 const selectWorkspaceRightSidebarOpen = (store: WorkspaceContextStore) => store.sidebars.right.open;
 const selectWorkspaceRightSidebarSize = (store: WorkspaceContextStore) => store.sidebars.right.size;
 
+// Default connection to local ros instance.
+const defaultConnectionValue: Record<string, string | undefined> = {
+  url: window.configuration.ROS_NODE_URL,
+};
+
 function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const { classes } = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const { availableSources, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerProblems = useMessagePipeline(selectPlayerProblems);
+  const { selectedSource } = usePlayerSelection();
+  const { isLiveView, setLocalFileName, setLocalFileSize } = useNavigationStore();
+  const { changePanelLayout } = useCurrentLayoutActions();
+  const { isUnsaved, setIsUnsavedDialogOpen, setUnsavedResolver, setIsUnsaved } =
+    useSettingsStore();
 
   const dataSourceDialog = useWorkspaceStore(selectWorkspaceDataSourceDialog);
   const leftSidebarItem = useWorkspaceStore(selectWorkspaceLeftSidebarItem);
@@ -127,7 +146,19 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   const rightSidebarSize = useWorkspaceStore(selectWorkspaceRightSidebarSize);
   const { t } = useTranslation("workspace");
 
+  // Stores
+  const { partialExtensionContext } = useContextStore();
+  const memoryStore = useMemoryStore();
+  const { isRecordingToolbarOpen } = useRecording();
+  const { isFlagsListOpen, setSidebarWorkspaceActions } = useSidebarRightStore();
+
+  // const subscriptions = useMessagePipeline((cntx) => cntx.subscriptions);
   const { dialogActions, sidebarActions } = useWorkspaceActions();
+
+  // Inject workspace actions into the sidebar store
+  useEffect(() => {
+    setSidebarWorkspaceActions(sidebarActions.right);
+  }, [setSidebarWorkspaceActions, sidebarActions.right]);
 
   // file types we support for drag/drop
   const allowedDropExtensions = useMemo(() => {
@@ -144,16 +175,20 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   // see comment below above the RemountOnValueChange component
   const playerId = useMessagePipeline(selectPlayerId);
 
-  const { currentUser } = useCurrentUser();
+  // const { currentUser } = useCurrentUser();
 
   useDefaultWebLaunchPreference();
 
-  const [enableStudioLogsSidebar = false] = useAppConfigurationValue<boolean>(
+  const [_enableStudioLogsSidebar = false] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_DEBUG_PANELS,
   );
 
   const { workspaceExtensions } = useAppContext();
 
+  useEffect(() => {
+    memoryStore.setSelectSource(selectSource);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectSource, memoryStore.setSelectSource]);
   // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
     if (
@@ -253,10 +288,34 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
         return source.supportedFileTypes?.includes(ext);
       });
       if (matchedSource) {
+        if (isUnsaved) {
+          setIsUnsavedDialogOpen(true);
+          await new Promise<void>((resolve) => {
+            setUnsavedResolver(resolve);
+          });
+          setIsUnsavedDialogOpen(false);
+          setIsUnsaved(false);
+        }
+
+        setLocalFileName(file.name.replace(/\.[^/.]+$/, ""));
+        setLocalFileSize(BigInt(file.size));
         selectSource(matchedSource.id, { type: "file", handle });
+        changePanelLayout({ layout: View.LIVE });
       }
     },
-    [availableSources, enqueueSnackbar, installExtension, selectSource],
+    [
+      availableSources,
+      enqueueSnackbar,
+      installExtension,
+      selectSource,
+      setLocalFileName,
+      setLocalFileSize,
+      changePanelLayout,
+      isUnsaved,
+      setIsUnsavedDialogOpen,
+      setUnsavedResolver,
+      setIsUnsaved,
+    ],
   );
 
   const openFiles = useCallback(
@@ -293,13 +352,42 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
           // select the first source that has files that match the supported extensions
           if (filteredFiles.length > 0) {
+            if (isUnsaved) {
+              setIsUnsavedDialogOpen(true);
+              await new Promise<void>((resolve) => {
+                setUnsavedResolver(resolve);
+              });
+              setIsUnsavedDialogOpen(false);
+              setIsUnsaved(false);
+            }
+
+            const firstValidFile = filteredFiles[0];
+
+            if (firstValidFile) {
+              setLocalFileName(firstValidFile.name.replace(/\.[^/.]+$/, ""));
+              setLocalFileSize(BigInt(firstValidFile.size));
+            }
+
             selectSource(source.id, { type: "file", files: otherFiles });
+            changePanelLayout({ layout: View.LIVE });
             break;
           }
         }
       }
     },
-    [availableSources, enqueueSnackbar, installExtension, selectSource],
+    [
+      availableSources,
+      enqueueSnackbar,
+      installExtension,
+      selectSource,
+      setLocalFileName,
+      setLocalFileSize,
+      changePanelLayout,
+      isUnsaved,
+      setIsUnsavedDialogOpen,
+      setUnsavedResolver,
+      setIsUnsaved,
+    ],
   );
 
   // files the main thread told us to open
@@ -325,8 +413,8 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     [openFiles, openHandle],
   );
 
-  const eventsSupported = useEvents(selectEventsSupported);
-  const showEventsTab = currentUser != undefined && eventsSupported;
+  // const eventsSupported = useEvents(selectEventsSupported);
+  // const showEventsTab = currentUser != undefined && eventsSupported;
 
   const leftSidebarItems = useMemo(() => {
     const items = new Map<LeftSidebarItemKey, SidebarItem>([
@@ -352,16 +440,25 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
 
   const rightSidebarItems = useMemo(() => {
     const items = new Map<RightSidebarItemKey, SidebarItem>([
-      ["variables", { title: t("variables"), component: VariablesList }],
+      //["variables", { title: t("variables"), component: VariablesList }],
     ]);
-    if (enableStudioLogsSidebar) {
-      items.set("studio-logs-settings", { title: t("studioLogs"), component: StudioLogsSettings });
+    // items.set("studio-logs-settings", { title: t("studioLogs"), component: StudioLogsSettings });
+
+    if (isFlagsListOpen) {
+      items.set("studio-flags", { title: t("flags"), component: FlagsList });
+    } else {
+      items.set("studio-sensors", { title: t("sensors"), component: SensorsList });
+      items.set("studio-visualization", {
+        title: t("visualization"),
+        component: VisualizationsList,
+      });
+      // items.set("studio-objects", { title: t("visualisation"), component: ObjectsList });
     }
-    if (showEventsTab) {
-      items.set("events", { title: t("events"), component: EventsList });
-    }
+    // if (showEventsTab) {
+    //   items.set("events", { title: t("events"), component: EventsList });
+    // }
     return items;
-  }, [enableStudioLogsSidebar, showEventsTab, t]);
+  }, [isFlagsListOpen, t]);
 
   const keyboardEventHasModifier = (event: KeyboardEvent) =>
     navigator.userAgent.includes("Mac") ? event.metaKey : event.ctrlKey;
@@ -389,7 +486,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
   }, [dialogActions.dataSource, dialogActions.openFile, sidebarActions.left, sidebarActions.right]);
 
   const play = useMessagePipeline(selectPlay);
-  const playUntil = useMessagePipeline(selectPlayUntil);
+  // const playUntil = useMessagePipeline(selectPlayUntil);
   const pause = useMessagePipeline(selectPause);
   const seek = useMessagePipeline(selectSeek);
   const isPlaying = useMessagePipeline(selectIsPlaying);
@@ -446,6 +543,13 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
     setUnappliedTime({ time: undefined });
   }, [playerPresence, seek, unappliedTime]);
 
+  // Connect to local ros instance on foxglove boot up. Connection via foxglove-bridge.
+  useLayoutEffect(() => {
+    if (selectedSource == undefined) {
+      selectSource("foxglove-websocket", { type: "connection", params: defaultConnectionValue });
+    }
+  });
+
   return (
     <PanelStateContextProvider>
       {dataSourceDialog.open && <DataSourceDialog />}
@@ -468,12 +572,12 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
           selectedLeftKey={leftSidebarOpen ? leftSidebarItem : undefined}
           onSelectLeftKey={sidebarActions.left.selectItem}
           leftSidebarSize={leftSidebarSize}
-          setLeftSidebarSize={sidebarActions.left.setSize}
+          // setLeftSidebarSize={sidebarActions.left.setSize}
           rightItems={rightSidebarItems}
           selectedRightKey={rightSidebarOpen ? rightSidebarItem : undefined}
           onSelectRightKey={sidebarActions.right.selectItem}
           rightSidebarSize={rightSidebarSize}
-          setRightSidebarSize={sidebarActions.right.setSize}
+          // setRightSidebarSize={sidebarActions.right.setSize}
         >
           {/* To ensure no stale player state remains, we unmount all panels when players change */}
           <RemountOnValueChange value={playerId}>
@@ -482,17 +586,21 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
             </Stack>
           </RemountOnValueChange>
         </Sidebars>
-        {play && pause && seek && (
-          <div style={{ flexShrink: 0 }}>
-            <PlaybackControls
-              play={play}
-              pause={pause}
-              seek={seek}
-              playUntil={playUntil}
-              isPlaying={isPlaying}
-              getTimeInfo={getTimeInfo}
-            />
-          </div>
+        {isLiveView && play && pause && seek && (
+          <PlaybackControls
+            play={play}
+            pause={pause}
+            seek={seek}
+            // playUntil={playUntil}
+            isPlaying={isPlaying}
+            getTimeInfo={getTimeInfo}
+          />
+        )}
+
+        {containerRef.current && partialExtensionContext && isRecordingToolbarOpen && (
+          <RecordingFooter
+            context={{ panelElement: containerRef.current, ...partialExtensionContext }}
+          />
         )}
       </div>
       {workspaceExtensions}

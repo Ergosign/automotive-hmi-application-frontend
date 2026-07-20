@@ -1,7 +1,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-
 import ReactRefreshPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import CopyPlugin from "copy-webpack-plugin";
@@ -92,7 +91,6 @@ export const mainConfig =
 
         path: params.outputPath,
       },
-
       plugins: [
         ...plugins,
         ...(appWebpackConfig.plugins ?? []),
@@ -105,7 +103,7 @@ export const mainConfig =
   <html>
     <head>
       <meta charset="utf-8">
-      <meta name="apple-mobile-web-app-capable" content="yes">
+      <meta name="mobile-web-app-capable" content="yes">
       <meta property="og:title" content="Foxglove Studio"/>
       <meta property="og:description" content="Open source visualization and debugging tool for robotics"/>
       <meta property="og:type" content="website"/>
@@ -138,6 +136,7 @@ export const mainConfig =
       global = globalThis;
       globalThis.FOXGLOVE_STUDIO_DEFAULT_LAYOUT = [/*FOXGLOVE_STUDIO_DEFAULT_LAYOUT_PLACEHOLDER*/][0];
     </script>
+    <script src="config.js"> </script>
     <body>
       <div id="root"></div>
     </body>

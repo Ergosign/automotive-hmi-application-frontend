@@ -16,7 +16,14 @@ import { PlayerProblem } from "@foxglove/studio-base/players/types";
 export const LeftSidebarItemKeys = ["panel-settings", "topics", "problems"] as const;
 export type LeftSidebarItemKey = (typeof LeftSidebarItemKeys)[number];
 
-export const RightSidebarItemKeys = ["events", "variables", "studio-logs-settings"] as const;
+export const RightSidebarItemKeys = [
+  "events",
+  "variables",
+  "studio-logs-settings",
+  "studio-sensors",
+  "studio-visualization",
+  "studio-flags",
+] as const;
 export type RightSidebarItemKey = (typeof RightSidebarItemKeys)[number];
 
 export type SessionProblem = PlayerProblem & { tag: string };

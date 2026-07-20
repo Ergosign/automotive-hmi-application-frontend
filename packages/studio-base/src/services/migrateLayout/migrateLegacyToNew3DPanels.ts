@@ -10,7 +10,7 @@ import type { RendererConfig } from "@foxglove/studio-base/panels/ThreeDeeRender
 import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRender/camera";
 import {
   getAllPanelIds,
-  getPanelIdForType,
+  getPanelRandomIdForType,
   getPanelTypeFromId,
 } from "@foxglove/studio-base/util/layout";
 
@@ -109,7 +109,7 @@ export function migrateLegacyToNew3DPanels(layoutData: LayoutData): LayoutData {
       newState = replacePanel(
         newState,
         id,
-        getPanelIdForType("3D"),
+        getPanelRandomIdForType("3D"),
         migrateLegacyToNew3DConfig(legacyConfig),
       );
     }

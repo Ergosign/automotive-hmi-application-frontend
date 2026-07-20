@@ -14,11 +14,11 @@
 import { Time, toMillis, fromMillis } from "@foxglove/rostime";
 
 const ARROW_SEEK_BIG_MS = 500;
-const ARROW_SEEK_DEFAULT_MS = 100;
+const ARROW_SEEK_DEFAULT_MS = 1000; // = 10 seconds
 const ARROW_SEEK_SMALL_MS = 10;
 export const DIRECTION = {
-  FORWARD: 1,
-  BACKWARD: -1,
+  FORWARD: 10,
+  BACKWARD: -10,
 };
 
 export const jumpSeek = (

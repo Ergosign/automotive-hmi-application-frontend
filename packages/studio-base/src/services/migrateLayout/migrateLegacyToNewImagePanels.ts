@@ -8,7 +8,7 @@ import { DEFAULT_CAMERA_STATE } from "@foxglove/studio-base/panels/ThreeDeeRende
 import { DEFAULT_PUBLISH_SETTINGS } from "@foxglove/studio-base/panels/ThreeDeeRender/renderables/PublishSettings";
 import {
   getAllPanelIds,
-  getPanelIdForType,
+  getPanelRandomIdForType,
   getPanelTypeFromId,
 } from "@foxglove/studio-base/util/layout";
 
@@ -75,7 +75,7 @@ export function migrateLegacyToNewImagePanels(layoutData: LayoutData): LayoutDat
       newState = replacePanel(
         newState,
         id,
-        getPanelIdForType("Image"),
+        getPanelRandomIdForType("Image"),
         migrateLegacyToNewImageConfig(legacyConfig),
       );
     }

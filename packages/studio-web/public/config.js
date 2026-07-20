@@ -1,0 +1,25 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+const DATABASE_SERVICE_NAME_CONST = "localhost";
+const NGINX_SERVICE_NAME_CONST = "localhost";
+
+const DATABASE_PORT_CONST = 5000;
+const NGINX_PORT_CONST = 5001;
+const ROS_NODE_PORT_CONST = 8765;
+
+const DATABASE_URL_CONST = `http://${DATABASE_SERVICE_NAME_CONST}:${DATABASE_PORT_CONST}`;
+const NGINX_URL_CONST = `http://${NGINX_SERVICE_NAME_CONST}:${NGINX_PORT_CONST}`;
+const ROS_NODE_URL_CONST = `ws://${NGINX_SERVICE_NAME_CONST}:${ROS_NODE_PORT_CONST}`;
+
+window.configuration = {
+  DATABASE_SERVICE_NAME: DATABASE_SERVICE_NAME_CONST,
+  NGINX_SERVICE_NAME: NGINX_SERVICE_NAME_CONST,
+  DATABASE_PORT: DATABASE_PORT_CONST,
+  NGINX_PORT: NGINX_PORT_CONST,
+  ROS_NODE_PORT: ROS_NODE_PORT_CONST,
+  DATABASE_URL: DATABASE_URL_CONST,
+  NGINX_URL: NGINX_URL_CONST,
+  ROS_NODE_URL: ROS_NODE_URL_CONST,
+};

@@ -5,10 +5,11 @@
 import Clock from "@mui/icons-material/AccessTime";
 import Add from "@mui/icons-material/Add";
 import Addchart from "@mui/icons-material/Addchart";
-import Points from "@mui/icons-material/BlurOn";
+import Radar from "@mui/icons-material/BlurOn";
 import Check from "@mui/icons-material/Check";
 import Circle from "@mui/icons-material/Circle";
 import Clear from "@mui/icons-material/Clear";
+import Frame from "@mui/icons-material/CropFree";
 import Delete from "@mui/icons-material/Delete";
 import Walk from "@mui/icons-material/DirectionsWalk";
 import Flag from "@mui/icons-material/Flag";
@@ -28,7 +29,7 @@ import Note from "@mui/icons-material/NoteOutlined";
 import Move from "@mui/icons-material/OpenWith";
 import Camera from "@mui/icons-material/PhotoCamera";
 import PrecisionManufacturing from "@mui/icons-material/PrecisionManufacturing";
-import Radar from "@mui/icons-material/Radar";
+import Points from "@mui/icons-material/Radar";
 import Settings from "@mui/icons-material/Settings";
 import Share from "@mui/icons-material/Share";
 import SouthEast from "@mui/icons-material/SouthEast";
@@ -37,9 +38,9 @@ import Timeline from "@mui/icons-material/Timeline";
 import Topic from "@mui/icons-material/Topic";
 import Collapse from "@mui/icons-material/UnfoldLess";
 import Expand from "@mui/icons-material/UnfoldMore";
+import ImageProjection from "@mui/icons-material/VideoCameraBackOutlined";
 import Cells from "@mui/icons-material/ViewComfy";
 import Cube from "@mui/icons-material/ViewInAr";
-import ImageProjection from "@mui/icons-material/Vrpano";
 
 import { SettingsIcon } from "@foxglove/studio";
 
@@ -60,6 +61,7 @@ const icons: Record<SettingsIcon, typeof Add> = {
   Flag,
   Folder,
   FolderOpen,
+  Frame,
   Grid,
   Hive,
   ImageProjection,

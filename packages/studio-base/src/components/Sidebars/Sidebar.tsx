@@ -7,6 +7,7 @@ import { Badge, BadgeProps, Divider, IconButton, Tab, Tabs } from "@mui/material
 import { makeStyles } from "tss-react/mui";
 
 import Stack from "@foxglove/studio-base/components/Stack";
+import { serif_14px_500 } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles()((theme) => ({
   root: {
@@ -16,6 +17,8 @@ const useStyles = makeStyles()((theme) => ({
   badgeRoot: {
     display: "flex",
     alignItems: "baseline",
+    fontSize: theme.typography.body1.fontSize,
+    textTransform: "uppercase",
     gap: theme.spacing(1),
   },
   badge: {
@@ -35,24 +38,21 @@ const useStyles = makeStyles()((theme) => ({
     borderRight: `1px solid ${theme.palette.divider}`,
   },
   tabs: {
-    minHeight: "auto",
-    flex: "1 1 auto",
-    overflow: "hidden",
-    paddingLeft: theme.spacing(0.25),
+    height: theme.spacing(8),
+    width: "100%",
 
-    ".MuiTabs-indicator": {
-      transform: "scaleX(0.5)",
-      height: 2,
-    },
     ".MuiTab-root": {
-      minHeight: 30,
-      minWidth: theme.spacing(4),
-      padding: theme.spacing(0, 1),
-      color: theme.palette.text.secondary,
-      fontSize: "0.6875rem",
+      ...serif_14px_500,
+      color: theme.palette.greys["dadada"],
+      height: theme.spacing(8),
+      opacity: 1,
+
+      "&:hover": {
+        color: theme.palette.greys["dadada"],
+      },
 
       "&.Mui-selected": {
-        color: theme.palette.text.primary,
+        color: theme.palette.key.cyan.main,
       },
     },
   },
@@ -65,9 +65,12 @@ const useStyles = makeStyles()((theme) => ({
       color: theme.palette.text.primary,
     },
   },
-  tabContent: {
+  tabContentContainer: {
     flex: "auto",
     overflow: "auto",
+  },
+  tabContent: {
+    height: "100%",
   },
 }));
 
@@ -79,10 +82,6 @@ export type SidebarItem = {
     count: number;
   };
 };
-
-function Noop(): ReactNull {
-  return ReactNull;
-}
 
 export function Sidebar<K extends string>({
   items,
@@ -99,8 +98,6 @@ export function Sidebar<K extends string>({
 }): JSX.Element {
   const { classes, cx } = useStyles();
 
-  const SelectedComponent = (activeTab && items.get(activeTab)?.component) ?? Noop;
-
   return (
     <Stack
       className={cx(classes.root, {
@@ -111,10 +108,12 @@ export function Sidebar<K extends string>({
       overflow="hidden"
       data-tourid={`sidebar-${anchor}`}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack fullWidth direction="row" justifyContent="space-between" alignItems="center">
         <Tabs
           className={classes.tabs}
           textColor="inherit"
+          variant="fullWidth"
+          centered
           value={activeTab ?? false}
           onChange={(_ev, newValue: K) => {
             if (newValue !== activeTab) {
@@ -145,21 +144,34 @@ export function Sidebar<K extends string>({
           ))}
         </Tabs>
 
-        <IconButton
-          className={classes.iconButton}
-          onClick={onClose}
-          size="small"
-          data-testid={`sidebar-close-${anchor}`}
-        >
-          <CloseIcon fontSize="inherit" />
-        </IconButton>
+        {anchor !== "right" && (
+          <IconButton
+            className={classes.iconButton}
+            onClick={onClose}
+            size="small"
+            data-testid={`sidebar-close-${anchor}`}
+          >
+            <CloseIcon fontSize="inherit" />
+          </IconButton>
+        )}
       </Stack>
+
       <Divider />
-      {activeTab != undefined && (
-        <div className={classes.tabContent}>
-          <SelectedComponent />
-        </div>
-      )}
+
+      <div className={classes.tabContentContainer}>
+        {Array.from(items.entries(), ([key, item]) => {
+          const Comp = item.component;
+          return (
+            <div
+              key={key}
+              className={classes.tabContent}
+              style={{ display: key === activeTab ? "block" : "none" }}
+            >
+              <Comp />
+            </div>
+          );
+        })}
+      </div>
     </Stack>
   );
 }
