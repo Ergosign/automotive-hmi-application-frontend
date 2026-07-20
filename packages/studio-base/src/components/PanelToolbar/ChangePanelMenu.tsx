@@ -41,7 +41,7 @@ export default function ChangePanelMenu({
   const handleSwap = useCallback(
     (id?: string) =>
       ({ type, config, relatedConfigs }: PanelSelection) => {
-        // Reselecting current panel type is a no-op.
+        // Re-selecting current panel type is a no-op.
         if (type === panelContext?.type) {
           onClose();
           return;

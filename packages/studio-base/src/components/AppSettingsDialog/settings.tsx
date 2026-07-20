@@ -86,7 +86,7 @@ function formatTimezone(name: string) {
 
 export function ColorSchemeSettings(): JSX.Element {
   const { classes } = useStyles();
-  const [colorScheme = "system", setColorScheme] = useAppConfigurationValue<string>(
+  const [colorScheme = "dark", setColorScheme] = useAppConfigurationValue<string>(
     AppSetting.COLOR_SCHEME,
   );
   const { t } = useTranslation("appSettings");

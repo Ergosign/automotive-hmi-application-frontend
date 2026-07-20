@@ -180,7 +180,7 @@ export default function CurrentLayoutProvider({
       },
       createTabPanel: (payload: CreateTabPanelPayload) => {
         performAction({ type: "CREATE_TAB_PANEL", payload });
-        setSelectedPanelIds([]);
+        // setSelectedPanelIds([]);
         void analytics.logEvent(AppEvent.PANEL_ADD, { type: "Tab" });
       },
       changePanelLayout: (payload: ChangePanelLayoutPayload) => {

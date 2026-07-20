@@ -19,6 +19,7 @@ import {
   TriangleListPrimitive,
 } from "@foxglove/schemas";
 import { SettingsTreeAction } from "@foxglove/studio";
+import { rgbaToHex } from "@foxglove/studio-base/panels/ThreeDeeRender/color";
 
 import { TopicEntities } from "./TopicEntities";
 import { PrimitivePool } from "./primitives/PrimitivePool";
@@ -47,11 +48,14 @@ const SCENE_ENTITIES_DEFAULT_SETTINGS: LayerSettingsEntity = {
 };
 
 export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
+  #lastSeenCubeColorMap: Record<string, string> = {};
+
   #primitivePool = new PrimitivePool(this.renderer);
 
   public constructor(renderer: IRenderer) {
     super("foxglove.SceneEntities", renderer);
   }
+
   public override getSubscriptions(): readonly AnyRendererSubscription[] {
     return [
       {
@@ -65,18 +69,30 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
   public override settingsNodes(): SettingsTreeEntry[] {
     const configTopics = this.renderer.config.topics;
     const entries: SettingsTreeEntry[] = [];
+
     for (const topic of this.renderer.topics ?? []) {
       if (!topicIsConvertibleToSchema(topic, SCENE_UPDATE_DATATYPES)) {
         continue;
       }
+
       const config = (configTopics[topic.name] ?? {}) as Partial<LayerSettingsEntity>;
+      const fallbackHex = this.#lastSeenCubeColorMap[topic.name];
+      const initialColor = config.color ?? fallbackHex;
+
+      if (initialColor != undefined && config.color == undefined) {
+        this.saveSetting(["topics", topic.name, "color"], initialColor);
+      }
 
       const node: SettingsTreeNodeWithActionHandler = {
         label: topic.name,
         icon: "Shapes",
         order: topic.name.toLocaleLowerCase(),
         fields: {
-          color: { label: "Color", input: "rgba", value: config.color },
+          color: {
+            label: "Color",
+            input: "rgba",
+            value: initialColor,
+          },
           showOutlines: {
             label: "Show outlines",
             input: "boolean",
@@ -154,6 +170,13 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
     for (const entityMsg of sceneUpdates.entities ?? []) {
       if (entityMsg) {
         const entity = normalizeSceneEntity(entityMsg);
+
+        if (entity.cubes.length > 0) {
+          const hex = rgbaToHex(entity.cubes[0]!.color);
+          this.#lastSeenCubeColorMap[topic] = hex;
+          this.updateSettingsTree();
+        }
+
         this.#getTopicEntities(topic).addOrUpdateEntity(
           entity,
           toNanoSec(messageEvent.receiveTime),
@@ -177,6 +200,7 @@ export class FoxgloveSceneEntities extends SceneExtension<TopicEntities> {
         settingsPath: ["topics", topic],
         topic,
         settings: { ...SCENE_ENTITIES_DEFAULT_SETTINGS, ...userSettings },
+        actionHandler: this.renderer.settings.handleAction.bind(this.renderer.settings),
       });
       this.renderables.set(topic, topicEntities);
       this.add(topicEntities);

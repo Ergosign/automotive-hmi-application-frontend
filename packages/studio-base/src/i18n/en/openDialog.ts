@@ -5,6 +5,7 @@
 export const openDialog = {
   canBeShared: "Share data files, visualization layouts, and custom extensions with teammates",
   collaborateTitle: "Accelerate development with Foxglove Data Platform",
+  connection: "Connection",
   convenientWebInterface:
     "Use a convenient web interface to tag, search, and retrieve data at lightning speed",
   createAFreeAccount: "Create a free account",

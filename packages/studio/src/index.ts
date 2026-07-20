@@ -511,6 +511,7 @@ export type SettingsIcon =
   | "Flag"
   | "Folder"
   | "FolderOpen"
+  | "Frame"
   | "Grid"
   | "Hive"
   | "ImageProjection"
@@ -527,8 +528,8 @@ export type SettingsIcon =
   | "Settings"
   | "Shapes"
   | "Share"
-  | "Star"
   | "SouthEast"
+  | "Star"
   | "Timeline"
   | "Topic"
   | "Walk"
@@ -674,6 +675,8 @@ export type SettingsTreeField = SettingsTreeFieldValue & {
    * Optional message indicating any error state for the field.
    */
   error?: string;
+
+  renderValue?: () => React.ReactNode;
 };
 
 export type SettingsTreeFields = Record<string, undefined | SettingsTreeField>;

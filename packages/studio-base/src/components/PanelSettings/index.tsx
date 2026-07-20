@@ -50,7 +50,7 @@ export default function PanelSettings({
   const singlePanelId = useCurrentLayoutSelector(singlePanelIdSelector);
   const {
     selectedPanelIds: originalSelectedPanelIds,
-    setSelectedPanelIds,
+    // setSelectedPanelIds,
     selectAllPanels,
   } = useSelectedPanels();
   const selectedPanelIds = selectedPanelIdsForTests ?? originalSelectedPanelIds;
@@ -70,7 +70,7 @@ export default function PanelSettings({
   // Automatically deselect the panel we were editing when the settings sidebar closes
   useUnmount(() => {
     if (selectedPanelId != undefined) {
-      setSelectedPanelIds([]);
+      // setSelectedPanelIds([]);
     }
   });
 

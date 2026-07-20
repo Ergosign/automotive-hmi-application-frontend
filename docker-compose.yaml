@@ -1,0 +1,20 @@
+# Start with: docker compose up
+# Stop with:  docker compose down
+
+version: "3.7"
+
+services:
+  ros_node:
+    container_name: "stadt-up-frontend"
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+    image: frontend
+    ports:
+      - "8080:8080"
+    command: yarn web:serve
+
+# Give the default network a nice name chosen by us. All images above should use this default network.
+networks:
+  default:
+    name: stadt-up-backend-network

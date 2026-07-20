@@ -13,7 +13,7 @@ import { LocalStorageSaveState } from "./types";
 
 function StudioLogsSettingsProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const [studioLogsSettingsSavedState, setStudioLogsSettingsSavedState] =
-    useLocalStorage<LocalStorageSaveState>("fox.studio-logs-settings", {});
+    useLocalStorage<LocalStorageSaveState>("fox.studio-sensors", {});
 
   const [studioLogsSettingsStore, setStudioLogsSettingsStore] = useState(() =>
     createStudioLogsSettingsStore(studioLogsSettingsSavedState),

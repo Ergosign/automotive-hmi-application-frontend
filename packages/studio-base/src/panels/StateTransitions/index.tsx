@@ -40,7 +40,7 @@ import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Stack from "@foxglove/studio-base/components/Stack";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { ChartData, ChartDatasets } from "@foxglove/studio-base/components/TimeBasedChart/types";
-import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+// import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { subscribePayloadFromMessagePath } from "@foxglove/studio-base/players/subscribePayloadFromMessagePath";
 import { SubscribePayload } from "@foxglove/studio-base/players/types";
@@ -187,8 +187,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const pathStrings = useMemo(() => paths.map(({ value }) => value), [paths]);
 
   const { openPanelSettings } = useWorkspaceActions();
-  const { id: panelId, setMessagePathDropConfig } = usePanelContext();
-  const { setSelectedPanelIds } = useSelectedPanels();
+  const { setMessagePathDropConfig } = usePanelContext();
+  // const { setSelectedPanelIds } = useSelectedPanels();
   const [focusedPath, setFocusedPath] = useState<undefined | string[]>(undefined);
 
   useEffect(() => {
@@ -458,7 +458,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
                   className={classes.button}
                   endIcon={<Edit16Filled />}
                   onClick={() => {
-                    setSelectedPanelIds([panelId]);
+                    // setSelectedPanelIds([panelId]);
                     openPanelSettings();
                     setFocusedPath(["paths", String(index)]);
                   }}

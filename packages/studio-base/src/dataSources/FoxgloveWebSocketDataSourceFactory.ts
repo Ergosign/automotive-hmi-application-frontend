@@ -36,7 +36,7 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
       {
         id: "url",
         label: "WebSocket URL",
-        defaultValue: "ws://localhost:8765",
+        defaultValue: window.configuration.ROS_NODE_URL,
         validate: (newValue: string): Error | undefined => {
           try {
             const url = new URL(newValue);

@@ -35,12 +35,15 @@ import Slider, { HoverOverEvent } from "./Slider";
 
 const useStyles = makeStyles()((theme) => ({
   marker: {
-    backgroundColor: theme.palette.text.primary,
+    background: theme.palette.common.white,
     position: "absolute",
-    height: 16,
+    height: 48,
     borderRadius: 1,
     width: 2,
     transform: "translate(-50%, 0)",
+  },
+  markerPlayingMode: {
+    background: theme.palette.key.cyan.main,
   },
   track: {
     position: "absolute",
@@ -63,10 +66,11 @@ const selectPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence
 
 type Props = {
   onSeek: (seekTo: Time) => void;
+  isPlaying: boolean;
 };
 
 export default function Scrubber(props: Props): JSX.Element {
-  const { onSeek } = props;
+  const { onSeek, isPlaying } = props;
   const { classes, cx } = useStyles();
 
   const [hoverComponentId] = useState<string>(() => uuidv4());
@@ -137,17 +141,45 @@ export default function Scrubber(props: Props): JSX.Element {
       if (val == undefined) {
         return undefined;
       }
-      return <div className={classes.marker} style={{ left: `${val * 100}%` }} />;
+      return (
+        <div
+          className={cx(classes.marker, { [classes.markerPlayingMode]: isPlaying })}
+          style={{ left: `${val * 100}%` }}
+        />
+      );
     },
-    [classes.marker],
+    [classes.marker, classes.markerPlayingMode, cx, isPlaying],
   );
 
   const min = startTime && toSec(startTime);
   const max = endTime && toSec(endTime);
-  const fraction =
-    currentTime && startTime && endTime
-      ? toSec(subtractTimes(currentTime, startTime)) / toSec(subtractTimes(endTime, startTime))
-      : undefined;
+
+  let fraction = undefined;
+
+  if (currentTime && startTime && endTime) {
+    const currentTimeInSec = toSec(subtractTimes(currentTime, startTime));
+    const endTimeInSec = toSec(subtractTimes(endTime, startTime));
+
+    const getCorrectCurrentTime = () => {
+      /**
+       * For some reason, the `currentTime` changes from 0 seconds to 0.099 seconds shortly after the recording is opened.
+       * If this is the case, the fraction must be corrected so that the time marker is displayed in the correct position at 0 seconds.
+       *
+       * **Notes:** This is only a visual correction of the current time - the recording will still start at 0.099 seconds.
+       * However, due to the fact that it only occurs when the recording is initially opened
+       * and only the first 0.099 seconds are not played, this is justifiable.
+       */
+      const varianceTime = 0.099;
+
+      if (currentTimeInSec === varianceTime) {
+        return currentTimeInSec - varianceTime;
+      } else {
+        return currentTimeInSec;
+      }
+    };
+
+    fraction = getCorrectCurrentTime() / endTimeInSec;
+  }
 
   const loading = presence === PlayerPresence.INITIALIZING || presence === PlayerPresence.BUFFERING;
 

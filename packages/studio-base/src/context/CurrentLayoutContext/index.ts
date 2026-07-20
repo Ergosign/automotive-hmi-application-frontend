@@ -13,7 +13,7 @@ import {
 import Logger from "@foxglove/log";
 import { VariableValue, RenderState } from "@foxglove/studio";
 import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
-import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
+// import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
 import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 
 import {
@@ -211,21 +211,21 @@ export function useSelectedPanels(): SelectedPanelActions {
   }, [getCurrentLayout, setSelectedPanelIds]);
 
   const togglePanelSelected = useCallback(
-    (panelId: string, containingTabId: string | undefined) => {
-      setSelectedPanelIds((selectedIds) => {
-        const { selectedLayout } = getCurrentLayout();
-        if (!selectedLayout?.data) {
-          return selectedIds;
-        }
-        return toggleSelectedPanel(
-          panelId,
-          containingTabId,
-          selectedLayout.data.configById,
-          selectedIds,
-        );
-      });
+    (_panelId: string, _containingTabId: string | undefined) => {
+      // setSelectedPanelIds((selectedIds) => {
+      //   const { selectedLayout } = getCurrentLayout();
+      //   if (!selectedLayout?.data) {
+      //     return selectedIds;
+      //   }
+      //   return toggleSelectedPanel(
+      //     panelId,
+      //     containingTabId,
+      //     selectedLayout.data.configById,
+      //     selectedIds,
+      //   );
+      // });
     },
-    [setSelectedPanelIds, getCurrentLayout],
+    [],
   );
 
   return useShallowMemo({

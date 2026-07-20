@@ -468,6 +468,9 @@ export default function muiComponents(theme: Theme): Theme["components"] & MuiLa
         square: true,
       },
       styleOverrides: {
+        root: {
+          background: `${theme.palette.greys.black} !important`,
+        },
         elevation: {
           backgroundImage: "none !important",
         },

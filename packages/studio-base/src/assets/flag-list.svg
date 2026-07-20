@@ -1,0 +1,10 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="Group 11">
+        <path id="Rectangle 65" d="M12 13.5H20V15.5H12V13.5Z" fill="currentColor" />
+        <path id="Rectangle 68" d="M12 17.5H20V19.5H12V17.5Z" fill="currentColor" />
+        <path id="Rectangle 66" d="M12 9.5H20V11.5H12V9.5Z" fill="currentColor" />
+        <path id="Subtract" fill-rule="evenodd" clip-rule="evenodd"
+            d="M7.76 4.5L7.36 2.5H2V8.5H9.24L9.60195 10.3098V12.5H8L7.6 10.5H2V17.5H0V0.5H9L9.4 2.5H15V7H13V4.5H7.76Z"
+            fill="currentColor" />
+    </g>
+</svg>

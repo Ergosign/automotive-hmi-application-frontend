@@ -3,8 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@mui/material";
-import { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLatest } from "react-use";
+import { makeStyles } from "tss-react/mui";
 import { v4 as uuid } from "uuid";
 
 import { useValueChangedDebugLog, useSynchronousMountedState } from "@foxglove/hooks";
@@ -26,9 +27,10 @@ import {
   useMessagePipeline,
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
-import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
+import PanelContext, { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   ExtensionCatalog,
   useExtensionCatalog,
@@ -39,15 +41,20 @@ import {
   useSetHoverValue,
 } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { useRecording } from "@foxglove/studio-base/hooks/useRecording";
 import {
   AdvertiseOptions,
   PlayerCapabilities,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
+import { View } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
 import {
   usePanelSettingsTreeUpdate,
   useDefaultPanelTitle,
 } from "@foxglove/studio-base/providers/PanelStateContextProvider";
+import { useContextStore } from "@foxglove/studio-base/stores/useContextStore";
+import { useNavigationStore } from "@foxglove/studio-base/stores/useNavigationStore";
+import { useRecordingInfoStore } from "@foxglove/studio-base/stores/useRecordingInfoStore";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
 
@@ -56,20 +63,9 @@ import { initRenderStateBuilder } from "./renderState";
 import { BuiltinPanelExtensionContext } from "./types";
 import { useSharedPanelState } from "./useSharedPanelState";
 
-const log = Logger.getLogger(__filename);
-
+export const MAIN_PANEL_ID = "main-panel";
+export type PartialPanelExtensionContext = Omit<BuiltinPanelExtensionContext, "panelElement">;
 type VersionedPanelConfig = Record<string, unknown> & { [VERSION_CONFIG_KEY]: number };
-
-export const VERSION_CONFIG_KEY = "foxgloveConfigVersion";
-
-function isVersionedPanelConfig(config: unknown): config is VersionedPanelConfig {
-  return (
-    config != undefined &&
-    typeof config === "object" &&
-    VERSION_CONFIG_KEY in config &&
-    typeof config[VERSION_CONFIG_KEY] === "number"
-  );
-}
 
 type PanelExtensionAdapterProps = {
   /** function that initializes the panel extension */
@@ -86,6 +82,35 @@ type PanelExtensionAdapterProps = {
   config: unknown;
   saveConfig: SaveConfig<unknown>;
 };
+type RenderFn = NonNullable<PanelExtensionContext["onRender"]>;
+
+const useStyles = makeStyles()(() => ({
+  panel: {
+    alignItems: "stretch",
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    overflow: "hidden",
+    width: "100%",
+    zIndex: 0,
+  },
+  // orangeBorder: {
+  //   borderColor: "orange",
+  // },
+}));
+
+const log = Logger.getLogger(__filename);
+
+export const VERSION_CONFIG_KEY = "foxgloveConfigVersion";
+
+function isVersionedPanelConfig(config: unknown): config is VersionedPanelConfig {
+  return (
+    config != undefined &&
+    typeof config === "object" &&
+    VERSION_CONFIG_KEY in config &&
+    typeof config[VERSION_CONFIG_KEY] === "number"
+  );
+}
 
 function selectContext(ctx: MessagePipelineContext) {
   return ctx;
@@ -95,7 +120,6 @@ function selectInstalledMessageConverters(state: ExtensionCatalog) {
   return state.installedMessageConverters;
 }
 
-type RenderFn = NonNullable<PanelExtensionContext["onRender"]>;
 /**
  * PanelExtensionAdapter renders a panel extension via initPanel
  *
@@ -104,7 +128,25 @@ type RenderFn = NonNullable<PanelExtensionContext["onRender"]>;
 function PanelExtensionAdapter(
   props: React.PropsWithChildren<PanelExtensionAdapterProps>,
 ): JSX.Element {
+  const { classes, cx } = useStyles();
   const { initPanel, config, saveConfig, highestSupportedConfigVersion } = props;
+
+  const panelContext = useContext(PanelContext);
+  const [isMainPanel, setIsMainPanel] = useState(false);
+
+  useEffect(() => {
+    if (panelContext && panelContext.id.endsWith("main")) {
+      setIsMainPanel(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Stores
+  const { openRecordingToolbar, setRecordingState } = useRecording();
+  const { setPartialExtensionContext } = useContextStore();
+  const { isBackButtonClicked, resetBackButtonClicked } = useNavigationStore();
+  const { recordingInfo } = useRecordingInfoStore();
+  const { isRecording } = useRecording();
 
   // Unlike the react data flow, the config is only provided to the panel once on setup.
   // The panel is meant to manage the config and call saveConfig on its own.
@@ -136,7 +178,7 @@ function PanelExtensionAdapter(
   const [renderFn, setRenderFn] = useState<RenderFn | undefined>();
   const isPanelInitializedRef = useRef(false);
 
-  const [slowRender, setSlowRender] = useState(false);
+  // const [slowRender, setSlowRender] = useState(false);
   const [, setDefaultPanelTitle] = useDefaultPanelTitle();
 
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
@@ -174,7 +216,6 @@ function PanelExtensionAdapter(
   // Register handlers to update the app settings we subscribe to
   useEffect(() => {
     const handlers = new Map<string, (newValue: AppSettingValue) => void>();
-
     for (const key of subscribedAppSettings) {
       const handler = (newValue: AppSettingValue) => {
         setAppSettings((old) => {
@@ -242,12 +283,12 @@ function PanelExtensionAdapter(
       return;
     }
 
-    if (renderingRef.current) {
-      setSlowRender(true);
-      return;
-    }
+    // if (renderingRef.current) {
+    //   setSlowRender(true);
+    //   return;
+    // }
 
-    setSlowRender(false);
+    // setSlowRender(false);
     const resumeFrame = pauseFrame(panelId);
 
     // tell the panel to render and lockout future renders until rendering is complete
@@ -288,7 +329,6 @@ function PanelExtensionAdapter(
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
-  type PartialPanelExtensionContext = Omit<BuiltinPanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
     const layout: PanelExtensionContext["layout"] = {
       addPanel({ position, type, updateIfExists, getState }) {
@@ -533,12 +573,15 @@ function PanelExtensionAdapter(
     setMessagePathDropConfig,
   ]);
 
+  useEffect(() => {
+    setPartialExtensionContext(partialExtensionContext);
+  }, [partialExtensionContext, setPartialExtensionContext]);
+
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);
 
   useValueChangedDebugLog(initPanel, "initPanel");
   useValueChangedDebugLog(panelId, "panelId");
   useValueChangedDebugLog(partialExtensionContext, "partialExtensionContext");
-
   const configTooNew = useMemo(() => {
     const latestConfig = initialState.current;
     return (
@@ -547,6 +590,25 @@ function PanelExtensionAdapter(
       latestConfig[VERSION_CONFIG_KEY] > highestSupportedConfigVersion
     );
   }, [initialState, highestSupportedConfigVersion]);
+
+  // If client connects to ros node and a recording is still running, the recording ui elements are shown.
+  useEffect(() => {
+    setRecordingState({ state: recordingInfo.recording });
+
+    if (isRecording) {
+      openRecordingToolbar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording, recordingInfo.recording]);
+
+  const { changePanelLayout } = useCurrentLayoutActions();
+
+  useEffect(() => {
+    if (isBackButtonClicked) {
+      changePanelLayout({ layout: View.RECORDINGS });
+      resetBackButtonClicked();
+    }
+  }, [changePanelLayout, isBackButtonClicked, resetBackButtonClicked]);
 
   // Manage extension lifecycle by calling initPanel() when the panel context changes.
   //
@@ -566,7 +628,7 @@ function PanelExtensionAdapter(
     // Reset local state when the panel element is mounted or changes
     setRenderFn(undefined);
     renderingRef.current = false;
-    setSlowRender(false);
+    // setSlowRender(false);
 
     setBuildRenderState(() => initRenderStateBuilder());
 
@@ -574,6 +636,7 @@ function PanelExtensionAdapter(
     panelElement.style.width = "100%";
     panelElement.style.height = "100%";
     panelElement.style.overflow = "hidden";
+    panelElement.setAttribute("id", panelContext?.id ?? panelId);
     panelContainerRef.current.appendChild(panelElement);
 
     log.info(`Init panel ${panelId}`);
@@ -597,14 +660,14 @@ function PanelExtensionAdapter(
       getMessagePipelineContext().setSubscriptions(panelId, []);
       getMessagePipelineContext().setPublishers(panelId, []);
     };
-  }, [initPanel, panelId, partialExtensionContext, getMessagePipelineContext, configTooNew]);
-
-  const style: CSSProperties = {};
-  if (slowRender) {
-    style.borderColor = "orange";
-    style.borderWidth = "1px";
-    style.borderStyle = "solid";
-  }
+  }, [
+    initPanel,
+    panelId,
+    partialExtensionContext,
+    getMessagePipelineContext,
+    configTooNew,
+    panelContext?.id,
+  ]);
 
   if (error) {
     throw error;
@@ -612,21 +675,18 @@ function PanelExtensionAdapter(
 
   return (
     <div
-      style={{
-        alignItems: "stretch",
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        overflow: "hidden",
-        width: "100%",
-        zIndex: 0,
-        ...style,
-      }}
+      className={cx(classes.panel, {
+        // [classes.orangeBorder]: slowRender,
+      })}
     >
       <PanelToolbar />
       {configTooNew && <PanelConfigVersionError />}
       {props.children}
-      <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
+      <div
+        id={isMainPanel ? MAIN_PANEL_ID : undefined}
+        style={{ flex: 1, overflow: "hidden" }}
+        ref={panelContainerRef}
+      />
     </div>
   );
 }
