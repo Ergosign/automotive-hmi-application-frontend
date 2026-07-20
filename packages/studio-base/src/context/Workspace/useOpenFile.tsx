@@ -5,14 +5,22 @@
 import path from "path";
 import { useCallback, useMemo } from "react";
 
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   IDataSourceFactory,
   usePlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { View } from "@foxglove/studio-base/providers/CurrentLayoutProvider/defaultLayout";
+import { useNavigationStore } from "@foxglove/studio-base/stores/useNavigationStore";
+import { useSettingsStore } from "@foxglove/studio-base/stores/useSettingsStore";
 import showOpenFilePicker from "@foxglove/studio-base/util/showOpenFilePicker";
 
 export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> {
   const { selectSource } = usePlayerSelection();
+  const { setLocalFileName, setLocalFileSize } = useNavigationStore();
+  const { changePanelLayout } = useCurrentLayoutActions();
+  const { isUnsaved, setIsUnsavedDialogOpen, setUnsavedResolver, setIsUnsaved } =
+    useSettingsStore();
 
   const allExtensions = useMemo(() => {
     return sources.reduce<string[]>((all, source) => {
@@ -25,6 +33,15 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
   }, [sources]);
 
   return useCallback(async () => {
+    if (isUnsaved) {
+      setIsUnsavedDialogOpen(true);
+      await new Promise<void>((resolve) => {
+        setUnsavedResolver(resolve);
+      });
+      setIsUnsavedDialogOpen(false);
+      setIsUnsaved(false);
+    }
+
     const [fileHandle] = await showOpenFilePicker({
       types: [
         {
@@ -33,18 +50,17 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
         },
       ],
     });
+
     if (!fileHandle) {
       return;
     }
 
     const file = await fileHandle.getFile();
-    // Find the first _file_ source which can load our extension
+
     const matchingSources = sources.filter((source) => {
-      // Only consider _file_ type sources that have a list of supported file types
       if (!source.supportedFileTypes || source.type !== "file") {
         return false;
       }
-
       const extension = path.extname(file.name);
       return source.supportedFileTypes.includes(extension);
     });
@@ -58,6 +74,21 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
       throw new Error(`Cannot find source to handle ${file.name}`);
     }
 
+    const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
+    setLocalFileName(nameWithoutExtension);
+    setLocalFileSize(BigInt(file.size));
     selectSource(foundSource.id, { type: "file", handle: fileHandle });
-  }, [allExtensions, selectSource, sources]);
+    changePanelLayout({ layout: View.LIVE });
+  }, [
+    allExtensions,
+    selectSource,
+    sources,
+    setLocalFileName,
+    setLocalFileSize,
+    changePanelLayout,
+    isUnsaved,
+    setIsUnsavedDialogOpen,
+    setUnsavedResolver,
+    setIsUnsaved,
+  ]);
 }

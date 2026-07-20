@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useCallback, useEffect, useState } from "react";
+import { PropsWithChildren, useEffect, useState } from "react";
 import { MosaicNode, MosaicWithoutDragDropContext } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
@@ -66,13 +66,13 @@ type SidebarProps<LeftKey, RightKey> = PropsWithChildren<{
   selectedLeftKey: LeftKey | undefined;
   onSelectLeftKey: (key: LeftKey | undefined) => void;
   leftSidebarSize: number | undefined;
-  setLeftSidebarSize: (size: number | undefined) => void;
+  // setLeftSidebarSize: (size: number | undefined) => void;
 
   rightItems: Map<RightKey, SidebarItem>;
   selectedRightKey: RightKey | undefined;
   onSelectRightKey: (key: RightKey | undefined) => void;
   rightSidebarSize: number | undefined;
-  setRightSidebarSize: (size: number | undefined) => void;
+  // setRightSidebarSize: (size: number | undefined) => void;
 }>;
 
 export function Sidebars<LeftKey extends string, RightKey extends string>(
@@ -84,12 +84,12 @@ export function Sidebars<LeftKey extends string, RightKey extends string>(
     selectedLeftKey,
     onSelectLeftKey,
     leftSidebarSize,
-    setLeftSidebarSize,
+    // setLeftSidebarSize,
     rightItems,
     selectedRightKey,
     onSelectRightKey,
     rightSidebarSize,
-    setRightSidebarSize,
+    // setRightSidebarSize,
   } = props;
 
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<LayoutNode>>("children");
@@ -99,8 +99,8 @@ export function Sidebars<LeftKey extends string, RightKey extends string>(
   const rightSidebarOpen = selectedRightKey != undefined && rightItems.has(selectedRightKey);
 
   useEffect(() => {
-    const leftTargetWidth = 320;
-    const rightTargetWidth = 320;
+    const leftTargetWidth = 324;
+    const rightTargetWidth = 324;
     const defaultLeftPercentage = 100 * (leftTargetWidth / window.innerWidth);
     const defaultRightPercentage = 100 * (1 - rightTargetWidth / window.innerWidth);
 
@@ -130,16 +130,16 @@ export function Sidebars<LeftKey extends string, RightKey extends string>(
     });
   }, [leftSidebarSize, rightSidebarSize, leftSidebarOpen, rightSidebarOpen]);
 
-  const onChangeMosaicValue = useCallback(
-    (newValue: ReactNull | MosaicNode<LayoutNode>) => {
-      if (newValue != undefined) {
-        setMosaicValue(newValue);
-        setLeftSidebarSize(mosiacLeftSidebarSplitPercentage(newValue));
-        setRightSidebarSize(mosiacRightSidebarSplitPercentage(newValue));
-      }
-    },
-    [setLeftSidebarSize, setRightSidebarSize],
-  );
+  // const onChangeMosaicValue = useCallback(
+  //   (newValue: ReactNull | MosaicNode<LayoutNode>) => {
+  //     if (newValue != undefined) {
+  //       setMosaicValue(newValue);
+  //       setLeftSidebarSize(mosiacLeftSidebarSplitPercentage(newValue));
+  //       setRightSidebarSize(mosiacRightSidebarSplitPercentage(newValue));
+  //     }
+  //   },
+  //   [setLeftSidebarSize, setRightSidebarSize],
+  // );
 
   return (
     <Stack direction="row" fullHeight overflow="hidden">
@@ -151,7 +151,7 @@ export function Sidebars<LeftKey extends string, RightKey extends string>(
         <MosaicWithoutDragDropContext<LayoutNode>
           className=""
           value={mosaicValue}
-          onChange={onChangeMosaicValue}
+          // onChange={onChangeMosaicValue}
           renderTile={(id) => {
             switch (id) {
               case "children":

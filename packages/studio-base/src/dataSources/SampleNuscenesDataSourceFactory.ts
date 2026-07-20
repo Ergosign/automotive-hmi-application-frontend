@@ -39,7 +39,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
     return new IterablePlayer({
       source,
       isSampleDataSource: true,
-      name: "Adapted from nuScenes dataset. Copyright © 2020 nuScenes. https://www.nuscenes.org/terms-of-use",
+      name: "HM / SinglePanel",
       metricsCollector: args.metricsCollector,
       // Use blank url params so the data source is set in the url
       urlParams: {},

@@ -60,10 +60,11 @@ type ColorPickerInputProps = {
   placeholder?: string;
   readOnly?: boolean;
   hideClearButton?: boolean;
+  className?: string;
 };
 
 export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
-  const { alphaType, disabled, onChange, readOnly, hideClearButton, value } = props;
+  const { alphaType, disabled, onChange, readOnly, hideClearButton, value, className } = props;
 
   const { classes, cx } = useStyles();
 
@@ -93,7 +94,7 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
     <Stack
       className={cx(classes.root, {
         [classes.rootDisabled]: disabled === true || readOnly === true,
-      })}
+      }, className)}
     >
       <TextField
         className={classes.textField}

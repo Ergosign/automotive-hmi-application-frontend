@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { SceneEntity } from "@foxglove/schemas";
+import { SettingsTreeAction } from "@foxglove/studio";
 import { IRenderer } from "@foxglove/studio-base/panels/ThreeDeeRender/IRenderer";
 import { BaseUserData, Renderable } from "@foxglove/studio-base/panels/ThreeDeeRender/Renderable";
 import { RosValue } from "@foxglove/studio-base/players/types";
@@ -15,6 +16,7 @@ export type EntityRenderableUserData = BaseUserData & {
   entity?: SceneEntity;
   expiresAt?: bigint;
   settings?: LayerSettingsEntity;
+  actionHandler: (action: SettingsTreeAction) => void;
 };
 
 const PRIMITIVE_DEFAULT_SETTINGS: LayerSettingsEntity = {
@@ -34,6 +36,7 @@ export class RenderablePrimitive extends Renderable<EntityRenderableUserData> {
       pose: emptyPose(),
       settings: PRIMITIVE_DEFAULT_SETTINGS,
       settingsPath: [],
+      actionHandler: () => {},
       entity: undefined,
     },
   ) {

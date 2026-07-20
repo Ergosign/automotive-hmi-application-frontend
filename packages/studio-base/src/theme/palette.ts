@@ -13,6 +13,28 @@ declare module "@mui/material/styles" {
       primary: CSSProperties["color"];
       text: CSSProperties["color"];
     };
+    secondaries: {
+      darkBlue: { main: CSSProperties["color"] };
+      red: { main: CSSProperties["color"] };
+      green: { main: CSSProperties["color"] };
+      yellow: { main: CSSProperties["color"] };
+      orange: { main: CSSProperties["color"] };
+    };
+    flag: {
+      blue: { main: CSSProperties["color"] };
+    };
+    key: {
+      cyan: { main: CSSProperties["color"] };
+    };
+    greys: {
+      white: CSSProperties["color"];
+      black: CSSProperties["color"];
+      262626: CSSProperties["color"];
+      454545: CSSProperties["color"];
+      878787: CSSProperties["color"];
+      dadada: CSSProperties["color"];
+      b2b2b2: CSSProperties["color"];
+    };
   }
   interface PaletteOptions {
     name: string;
@@ -20,6 +42,28 @@ declare module "@mui/material/styles" {
       main: CSSProperties["color"];
       primary: CSSProperties["color"];
       text: CSSProperties["color"];
+    };
+    secondaries: {
+      darkBlue: { main: CSSProperties["color"] };
+      red: { main: CSSProperties["color"] };
+      green: { main: CSSProperties["color"] };
+      yellow: { main: CSSProperties["color"] };
+      orange: { main: CSSProperties["color"] };
+    };
+    flag: {
+      blue: { main: CSSProperties["color"] };
+    };
+    key: {
+      cyan: { main: CSSProperties["color"] };
+    };
+    greys: {
+      white: CSSProperties["color"];
+      black: CSSProperties["color"];
+      262626: CSSProperties["color"];
+      454545: CSSProperties["color"];
+      878787: CSSProperties["color"];
+      dadada: CSSProperties["color"];
+      b2b2b2: CSSProperties["color"];
     };
   }
   interface TypeBackground {
@@ -36,20 +80,33 @@ export const dark: PaletteOptions = {
     primary: "#9480ed",
     text: "#ffffff",
   },
-  primary: { main: "#9480ed" },
+  primary: { main: "#51B5FF" },
   secondary: { main: "#b1b1b1" },
-  error: { main: "#f54966" },
+  secondaries: {
+    darkBlue: { main: "#063dA5" },
+    red: { main: "#f95859" },
+    green: { main: "#00bc97" },
+    yellow: { main: "#feff01" },
+    orange: { main: "#faa100" },
+  },
+  flag: {
+    blue: { main: "#02a5c9" },
+  },
+  key: {
+    cyan: { main: "#51B5FF" },
+  },
+  error: { main: "#f95859" },
   warning: { main: "#eba800" },
   success: { main: "#92c353" },
   info: { main: "#29bee7" },
   text: {
-    primary: "#e1e1e4",
+    primary: "#fff",
     secondary: "#a7a6af",
   },
   divider: "#585861",
   background: {
     default: "#15151a",
-    paper: "#27272b",
+    paper: "#262626",
     menu: "#35363A",
   },
   grey: {
@@ -58,7 +115,7 @@ export const dark: PaletteOptions = {
     200: "#212127",
     300: "#27272b",
     400: "#2d2d33",
-    500: "#2f2f35",
+    500: "#262626",
     600: "#33333a",
     700: "#35353d",
     800: "#3b3b44",
@@ -67,6 +124,15 @@ export const dark: PaletteOptions = {
     A200: "#60636c",
     A400: "#aeb0b7",
     A700: "#d2d5df",
+  },
+  greys: {
+    white: "#fff",
+    black: "#000",
+    262626: "#262626",
+    454545: "#454545",
+    878787: "#878787",
+    dadada: "#dadada",
+    b2b2b2: "#b2b2b2",
   },
 };
 
@@ -81,6 +147,19 @@ export const light: PaletteOptions = {
   },
   primary: { main: "#6f3be8" },
   secondary: { main: "#808080" },
+  secondaries: {
+    darkBlue: { main: "#063dA5" },
+    red: { main: "#f95859" },
+    green: { main: "#00bc97" },
+    yellow: { main: "#feff01" },
+    orange: { main: "#faa100" },
+  },
+  flag: {
+    blue: { main: "#02a5c9" },
+  },
+  key: {
+    cyan: { main: "#51B5FF" },
+  },
   error: { main: "#db3553" },
   warning: { main: "#eba800" },
   success: { main: "#107c10" },
@@ -110,5 +189,14 @@ export const light: PaletteOptions = {
     A200: "#aaaaaa",
     A400: "#616161",
     A700: "#303030",
+  },
+  greys: {
+    white: "#fff",
+    black: "#000",
+    262626: "#262626",
+    454545: "#454545",
+    878787: "#878787",
+    dadada: "#dadada",
+    b2b2b2: "#b2b2b2",
   },
 };

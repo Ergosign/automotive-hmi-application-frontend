@@ -7,7 +7,8 @@ import { forwardRef, HTMLAttributes, PropsWithChildren } from "react";
 import { TransitionStatus } from "react-transition-group";
 import { makeStyles } from "tss-react/mui";
 
-import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
+// import { APP_BAR_HEIGHT } from "@foxglove/studio-base/components/AppBar/constants";
+import { useSidebarRightStore } from "@foxglove/studio-base/stores/useSidebarRightStore";
 
 export const PANEL_ROOT_CLASS_NAME = "FoxglovePanelRoot-root";
 
@@ -40,13 +41,9 @@ const useStyles = makeStyles<Omit<PanelRootProps, "fullscreenState" | "selected"
 
       "::after": {
         content: "''",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        inset: 1,
+        inset: 0,
         opacity: 0,
-        border: `1px solid ${palette.primary.main}`,
+        // border: `1px solid ${palette.primary.main}`,
         position: "absolute",
         pointerEvents: "none",
         transition: "opacity 0.05s ease-out",
@@ -55,6 +52,7 @@ const useStyles = makeStyles<Omit<PanelRootProps, "fullscreenState" | "selected"
     },
     rootSelected: {
       "::after": {
+        border: `2px solid ${theme.palette.key.cyan.main}`,
         opacity: 1,
         transition: "opacity 0.125s ease-out",
       },
@@ -68,12 +66,14 @@ const useStyles = makeStyles<Omit<PanelRootProps, "fullscreenState" | "selected"
       zIndex: 10000,
     },
     entered: {
-      borderWidth: 4,
+      // borderWidth: 4,
       position: "fixed",
-      top: APP_BAR_HEIGHT, // offset by app bar height
+      // top: APP_BAR_HEIGHT, // offset by app bar height
+      top: 0,
       left: 0,
       right: 0,
-      bottom: 77, // match PlaybackBar height
+      bottom: 0,
+      // bottom: 77, // match PlaybackBar height
       zIndex: 10000,
       transition: transitions.create(["border-width", "top", "right", "bottom", "left"], {
         duration, // match to timeout duration inside Panel component
@@ -110,13 +110,14 @@ export const PanelRoot = forwardRef<HTMLDivElement, PropsWithChildren<PanelRootP
     const { className, fullscreenState, hasFullscreenDescendant, selected, sourceRect, ...rest } =
       props;
     const { classes, cx } = useStyles({ sourceRect, hasFullscreenDescendant });
+    const { isSensorsListOpen } = useSidebarRightStore();
 
     const classNames = cx(PANEL_ROOT_CLASS_NAME, className, classes.root, {
       [classes.entering]: fullscreenState === "entering",
       [classes.entered]: fullscreenState === "entered",
       [classes.exiting]: fullscreenState === "exiting",
       [classes.exited]: fullscreenState === "exited",
-      [classes.rootSelected]: selected,
+      [classes.rootSelected]: fullscreenState !== "entered" && selected && isSensorsListOpen,
     });
 
     return (

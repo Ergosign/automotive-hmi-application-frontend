@@ -7,6 +7,10 @@ export const workspace = {
   panel: "Panel",
   problems: "Problems",
   studioLogs: "Studio Logs",
+  sensors: "Sensors",
+  objects: "Objects",
+  flags: "Flags",
+  visualization: "Visualization",
   topics: "Topics",
   variables: "Variables",
 };

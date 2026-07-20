@@ -72,6 +72,7 @@ export function NumberInput(
     step?: number;
     value?: number;
     onChange: (value: undefined | number) => void;
+    className?: string;
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
   const { classes, cx } = useStyles();
@@ -86,6 +87,7 @@ export function NumberInput(
     disabled,
     readOnly,
     precision = 100,
+    className,
   } = props;
 
   const inputRef = useRef<HTMLInputElement>(ReactNull);
@@ -161,7 +163,7 @@ export function NumberInput(
         updateValue(event.target.value.length > 0 ? Number(event.target.value) : undefined);
       }}
       type="number"
-      className={cx(classes.textField, { [classes.textFieldReadonly]: readOnly })}
+      className={cx(classes.textField, { [classes.textFieldReadonly]: readOnly }, className)}
       inputProps={{
         ref: inputRef,
         step,

@@ -68,22 +68,31 @@ export function PanelList(props: Props): JSX.Element {
   const displayPanelListItem = useCallback(
     (panelInfo: PanelInfo) => {
       const { title, type, config, relatedConfigs } = panelInfo;
-      return (
-        <PanelListItem
-          key={`${type}-${title}`}
-          mosaicId={mosaicId}
-          panel={panelInfo}
-          onDragStart={onDragStart}
-          onDrop={onPanelMenuItemDrop}
-          onClick={() => {
-            onPanelSelect({ type, config, relatedConfigs });
-            blurActiveElement();
-          }}
-          checked={type === selectedPanelType}
-          highlighted={highlightedPanel?.title === title}
-          searchQuery={searchQuery}
-        />
-      );
+      if (
+        panelInfo.title === "3D" ||
+        panelInfo.title === "Image" ||
+        panelInfo.title.toLowerCase() === "data source info" ||
+        panelInfo.title.toLowerCase() === "raw messages"
+      ) {
+        return (
+          <PanelListItem
+            key={`${type}-${title}`}
+            mosaicId={mosaicId}
+            panel={panelInfo}
+            onDragStart={onDragStart}
+            onDrop={onPanelMenuItemDrop}
+            onClick={() => {
+              onPanelSelect({ type, config, relatedConfigs });
+              blurActiveElement();
+            }}
+            checked={type === selectedPanelType}
+            highlighted={highlightedPanel?.title === title}
+            searchQuery={searchQuery}
+          />
+        );
+      } else {
+        return;
+      }
     },
     [
       highlightedPanel?.title,

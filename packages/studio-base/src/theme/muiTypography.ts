@@ -29,7 +29,7 @@ export function muiTypography({
       break;
     case "en":
     default:
-      fontFeatureSettings = fonts.SANS_SERIF_FEATURE_SETTINGS;
+      fontFeatureSettings = fonts.SANS_SERIF;
       break;
   }
   const baseFontStyles: TypographyStyle = {

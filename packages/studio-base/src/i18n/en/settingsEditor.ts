@@ -15,4 +15,6 @@ export const settingsEditor = {
   searchPanelSettings: "Search panel settings…",
   showAll: "Show All",
   title: "Title",
+  noSensors: "No sensors yet.",
+  noVisualizations: "No visualizations yet.",
 };

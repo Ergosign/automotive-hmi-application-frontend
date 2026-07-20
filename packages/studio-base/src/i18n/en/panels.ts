@@ -4,11 +4,16 @@
 
 export const panels = {
   "3D": "3D",
+  "3DPanel": "3D Panel",
   "3DPanelDescription": "Display markers, camera images, meshes, URDFs, and more in a 3D scene.",
   callService: "Call Service",
   callServiceDescription: "Call a service and view the service call result",
+  changePanel: "Change Panel",
+  configurePanel: "Configure Panel",
   dataSourceInfo: "Data Source Info",
   dataSourceInfoDescription: "View details like topics and timestamps for the current data source.",
+  enterFullscreen: "Enter Fullscreen",
+  exitFullscreen: "Exit Fullscreen",
   gauge: "Gauge",
   gaugeDescription: "Display a colored gauge based on a continuous value.",
   image: "Image",
@@ -27,6 +32,7 @@ export const panels = {
   publishDescription: "Publish messages to the data source (live connections only).",
   rawMessages: "Raw Messages",
   rawMessagesDescription: "Inspect topic messages.",
+  resetPanel: "Reset Panel",
   ROSDiagnosticsDetail: "Diagnostics – Detail (ROS)",
   ROSDiagnosticsDetailDescription:
     "Display ROS DiagnosticArray messages for a specific hardware_id.",
@@ -50,4 +56,6 @@ export const panels = {
     "Write custom data transformations in TypeScript. Previously known as Node Playground.",
   variableSlider: "Variable Slider",
   variableSliderDescription: "Update numerical variable values for a layout.",
+  noSetup: "– no setup –",
+  noSetupSelected: "No camera setup selected, select one from the dropdown above.",
 };

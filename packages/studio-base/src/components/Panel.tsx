@@ -17,6 +17,7 @@ import {
   TabDesktopMultiple20Regular,
   TableSimple20Regular,
 } from "@fluentui/react-icons";
+import { Drawer } from "@mui/material";
 import * as _ from "lodash-es";
 import React, {
   ComponentType,
@@ -46,6 +47,7 @@ import { useShallowMemo } from "@foxglove/hooks";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import { MosaicPathContext } from "@foxglove/studio-base/components/MosaicPathContext";
+import { Navigation } from "@foxglove/studio-base/components/Navigation/Navigation";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
 import { PanelOverlay, PanelOverlayProps } from "@foxglove/studio-base/components/PanelOverlay";
@@ -55,17 +57,16 @@ import {
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import {
-  useWorkspaceStore,
-  WorkspaceStoreSelectors,
-} from "@foxglove/studio-base/context/Workspace/WorkspaceContext";
 import usePanelDrag from "@foxglove/studio-base/hooks/usePanelDrag";
 import { useMessagePathDrop } from "@foxglove/studio-base/services/messagePathDragging";
+import { useNavigationStore } from "@foxglove/studio-base/stores/useNavigationStore";
+// import { useSidebarRightStore } from "@foxglove/studio-base/stores/useSidebarRightStore";
+import { useSidebarRightStore } from "@foxglove/studio-base/stores/useSidebarRightStore";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import {
-  getPanelIdForType,
+  getPanelRandomIdForType,
   getPanelTypeFromId,
   getPathFromNode,
   updateTabPanelLayout,
@@ -117,7 +118,7 @@ type ComponentConstructorType<P> = { displayName?: string } & (
   | ((props: P) => React.ReactElement<unknown> | ReactNull)
 );
 
-/** Used in storybook when panels are renered outside of a <PanelLayout/> */
+/** Used in storybook when panels are rendered outside of a <PanelLayout/> */
 const FALLBACK_PANEL_ID = "$unknown_id";
 
 // HOC that wraps panel in an error boundary and flex box.
@@ -145,7 +146,7 @@ export default function Panel<
       selectedPanelIds,
       setSelectedPanelIds,
       selectAllPanels,
-      togglePanelSelected,
+      // togglePanelSelected,
       getSelectedPanelIds,
     } = useSelectedPanels();
 
@@ -317,20 +318,26 @@ export default function Panel<
       [childId, mosaicActions, mosaicWindowActions, swapPanel, tabId],
     );
 
-    const panelSettingsOpen = useWorkspaceStore(WorkspaceStoreSelectors.selectPanelSettingsOpen);
+    // const panelSettingsOpen = useWorkspaceStore(WorkspaceStoreSelectors.selectPanelSettingsOpen);
+    const { isSensorsListOpen } = useSidebarRightStore();
 
     const onPanelRootClick: MouseEventHandler<HTMLDivElement> = useCallback(
       (e) => {
-        if (panelSettingsOpen) {
-          // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
+        // if (panelSettingsOpen) {
+        // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
+        if (isSensorsListOpen) {
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
-          setSelectedPanelIds([childId]);
-        } else if (e.metaKey || e.shiftKey || isSelected) {
-          e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
-          togglePanelSelected(childId, tabId);
+
+          if (!isSelected) {
+            setSelectedPanelIds([childId]);
+          }
         }
+        // } else if (e.metaKey || e.shiftKey || isSelected) {
+        //   e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
+        //   togglePanelSelected(childId, tabId);
+        // }
       },
-      [childId, tabId, togglePanelSelected, isSelected, setSelectedPanelIds, panelSettingsOpen],
+      [childId, isSelected, isSensorsListOpen, setSelectedPanelIds],
     );
 
     const groupPanels = useCallback(() => {
@@ -374,7 +381,7 @@ export default function Panel<
       }
       const tabSavedProps = tabId != undefined ? (savedProps[tabId] as TabPanelConfig) : undefined;
       if (tabId != undefined && tabSavedProps != undefined) {
-        const newId = getPanelIdForType(PanelComponent.panelType);
+        const newId = getPanelRandomIdForType(PanelComponent.panelType);
         const activeTabLayout = tabSavedProps.tabs[tabSavedProps.activeTabIdx]?.layout;
         if (activeTabLayout == undefined) {
           return;
@@ -422,7 +429,6 @@ export default function Panel<
       }),
       [parentPanelContext],
     );
-
     const setHasFullscreenDescendant = useCallback(
       // eslint-disable-next-line @foxglove/no-boolean-parameters
       (value: boolean) => {
@@ -468,12 +474,12 @@ export default function Panel<
           },
           Escape: () => {
             if (numSelectedPanelsIfSelected > 1) {
-              setSelectedPanelIds([]);
+              // setSelectedPanelIds([]);
             }
           },
         },
       }),
-      [selectAllPanels, numSelectedPanelsIfSelected, setSelectedPanelIds],
+      [selectAllPanels, numSelectedPanelsIfSelected],
     );
 
     const fullScreenKeyHandlers = useMemo(
@@ -495,7 +501,7 @@ export default function Panel<
     );
     const child = useMemo(() => <PanelComponent {...childProps} />, [childProps]);
 
-    const renderCount = useRef(0);
+    // const renderCount = useRef(0);
 
     const perfInfo = useRef<HTMLDivElement>(ReactNull);
     const quickActionsOverlayRef = useRef<HTMLDivElement>(ReactNull);
@@ -533,7 +539,7 @@ export default function Panel<
       }
       if (isSelected && numSelectedPanelsIfSelected > 1) {
         overlayProps.onClickAway = () => {
-          setSelectedPanelIds([]);
+          // setSelectedPanelIds([]);
         };
         overlayProps.variant = "selected";
         overlayProps.highlightMode = "all";
@@ -593,26 +599,26 @@ export default function Panel<
       numSelectedPanelsIfSelected,
       quickActionsKeyPressed,
       removePanel,
-      setSelectedPanelIds,
       splitPanel,
       type,
     ]);
 
+    const navigationStore = useNavigationStore();
     return (
       <Profiler
         id={childId}
         onRender={(
           _id,
           _phase,
-          actualDuration,
+          _actualDuration,
           _baseDuration,
           _startTime,
           _commitTime,
           _interactions,
         ) => {
-          if (perfInfo.current) {
-            perfInfo.current.innerText = `${++renderCount.current}\n${actualDuration.toFixed(1)}ms`;
-          }
+          // if (perfInfo.current) {
+          //   perfInfo.current.innerText = `${++renderCount.current}\n${actualDuration.toFixed(1)}ms`;
+          // }
         }}
       >
         <PanelContext.Provider
@@ -635,6 +641,15 @@ export default function Panel<
             setMessagePathDropConfig,
           }}
         >
+          <Drawer
+            onClose={() => {
+              navigationStore.close();
+            }}
+            open={navigationStore.isOpen}
+          >
+            {/* Using Navigation here to have panel Context. */}
+            <Navigation />
+          </Drawer>
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
           {fullscreen && <KeyListener global keyDownHandlers={fullScreenKeyHandlers} />}
           <Transition

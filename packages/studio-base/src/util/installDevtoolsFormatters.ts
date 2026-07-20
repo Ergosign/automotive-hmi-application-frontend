@@ -30,9 +30,21 @@ interface DevtoolFormatter {
   body?: (object: Record<string, unknown>) => HtmlTemplate;
 }
 
+interface Configuration {
+  DATABASE_SERVICE_NAME: string;
+  NGINX_SERVICE_NAME: string;
+  DATABASE_PORT: string;
+  NGINX_PORT: string;
+  ROS_NODE_PORT: string;
+  DATABASE_URL: string;
+  NGINX_URL: string;
+  ROS_NODE_URL: string;
+}
+
 declare global {
   interface Window {
     devtoolsFormatters: DevtoolFormatter[];
+    configuration: Configuration;
   }
 }
 

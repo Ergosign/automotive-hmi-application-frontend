@@ -45,7 +45,36 @@ export function formatTime(stamp: Time, timezone?: string): string {
     console.error("Times are not allowed to be negative");
     return "(invalid negative time)";
   }
-  return moment.tz(toDate(stamp), timezone ?? moment.tz.guess()).format("h:mm:ss.SSS A z");
+  return moment.tz(toDate(stamp), timezone ?? moment.tz.guess()).format("H:mm:ss z");
+}
+
+export function formatTimeFromMiliseconds(milliseconds: number): string {
+  const duration = moment.duration(milliseconds);
+
+  const hours = String(duration.hours()).padStart(2, "0");
+  const minutes = String(duration.minutes()).padStart(2, "0");
+  const seconds = String(duration.seconds()).padStart(2, "0");
+  const millisecondsPart = String(duration.milliseconds()).padStart(3, "0");
+
+  return `${hours}:${minutes}:${seconds}:${millisecondsPart}`;
+}
+
+export function formatTimeFromSeconds(seconds: number): string {
+  // Rounding seconds to the nearest integer
+  const totalSeconds = Math.floor(seconds);
+
+  // Calculate hours, minutes, and seconds
+  const duration = moment.duration(totalSeconds, "seconds");
+  const hours = Math.floor(duration.asHours());
+  const minutes = duration.minutes();
+  const remainingSeconds = duration.seconds();
+
+  // Format hours, minutes, and seconds as a string in hh:mm:ss format
+  const hoursStr = String(hours).padStart(2, "0");
+  const minutesStr = String(minutes).padStart(2, "0");
+  const secondsStr = String(remainingSeconds).padStart(2, "0");
+
+  return `${hoursStr}:${minutesStr}:${secondsStr}`;
 }
 
 export function formatDuration(stamp: Time): string {

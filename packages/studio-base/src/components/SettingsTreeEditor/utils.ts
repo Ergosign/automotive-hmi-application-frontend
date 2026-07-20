@@ -34,6 +34,12 @@ export function filterTreeNodes(
       return;
     }
 
+    const stringToMatch = (node.label ?? key).toLocaleLowerCase();
+
+    if (stringToMatch.includes("/internal")) {
+      return;
+    }
+
     // Include node in results if any children match the filter.
     const filtered = filterTreeNodes(node.children ?? {}, filter);
     if (Object.values(filtered).length > 0) {
@@ -41,7 +47,6 @@ export function filterTreeNodes(
     }
 
     // Match on label or key in tree.
-    const stringToMatch = (node.label ?? key).toLocaleLowerCase();
     if (stringToMatch.includes(filter.toLocaleLowerCase())) {
       result[key] = node;
     }

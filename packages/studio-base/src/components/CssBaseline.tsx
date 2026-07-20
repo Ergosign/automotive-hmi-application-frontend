@@ -7,7 +7,7 @@ import { PropsWithChildren } from "react";
 import tinycolor from "tinycolor2";
 import { makeStyles } from "tss-react/mui";
 
-import "@foxglove/studio-base/styles/assets/inter.css";
+import "@foxglove/studio-base/styles/assets/plex-sans.css";
 import "@foxglove/studio-base/styles/assets/plex-mono.css";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -122,7 +122,6 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
       ".mosaic-window": {
         boxShadow: "none",
         width: "100%",
-
         // we use custom toolbars
         ".mosaic-window-toolbar": {
           display: "none",
@@ -164,6 +163,7 @@ const useStyles = makeStyles()(({ palette, typography }) => ({
       },
       ".mosaic-split": {
         background: "none !important",
+        inset: "initial !important",
         zIndex: 99,
 
         ".mosaic-split-line": {

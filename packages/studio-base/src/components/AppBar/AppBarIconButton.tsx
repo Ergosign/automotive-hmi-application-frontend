@@ -12,7 +12,7 @@ const useStyles = makeStyles()((theme) => ({
     marginTop: `${theme.spacing(0.5)} !important`,
   },
   iconButton: {
-    borderRadius: 0,
+    borderRadius: "50%",
     fontSize: 24,
     padding: theme.spacing(1.25),
 
@@ -30,13 +30,19 @@ const useStyles = makeStyles()((theme) => ({
       opacity: theme.palette.action.disabledOpacity,
     },
   },
+  selected: {
+    backgroundColor: tinycolor(theme.palette.common.white).setAlpha(0.08).toRgbString(),
+  },
 }));
 
-type AppBarIconButtonProps = Omit<IconButtonProps, "title"> & { title?: React.ReactNode };
+type AppBarIconButtonProps = Omit<IconButtonProps, "title"> & {
+  title?: React.ReactNode;
+  selected?: boolean;
+};
 
 export const AppBarIconButton = forwardRef<HTMLButtonElement, AppBarIconButtonProps>(
   (props, ref) => {
-    const { title, className, children, color = "inherit", ...rest } = props;
+    const { title, selected, className, children, color = "inherit", ...rest } = props;
     const { classes, cx } = useStyles();
 
     return (
@@ -47,7 +53,12 @@ export const AppBarIconButton = forwardRef<HTMLButtonElement, AppBarIconButtonPr
         arrow={false}
         enterDelay={200}
       >
-        <IconButton color={color} ref={ref} className={cx(classes.iconButton, className)} {...rest}>
+        <IconButton
+          color={color}
+          ref={ref}
+          className={cx(classes.iconButton, { [classes.selected]: selected }, className)}
+          {...rest}
+        >
           {children}
         </IconButton>
       </Tooltip>

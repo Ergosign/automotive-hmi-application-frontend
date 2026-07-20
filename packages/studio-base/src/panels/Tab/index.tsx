@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { MosaicNode } from "react-mosaic-component";
 import { makeStyles } from "tss-react/mui";
 
@@ -24,7 +24,7 @@ import {
   DraggingTabPanelState,
   TabDndContext,
 } from "@foxglove/studio-base/panels/Tab/TabDndContext";
-import { TabbedToolbar } from "@foxglove/studio-base/panels/Tab/TabbedToolbar";
+// import { TabbedToolbar } from "@foxglove/studio-base/panels/Tab/TabbedToolbar";
 import { TabPanelConfig as Config } from "@foxglove/studio-base/types/layouts";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
@@ -53,51 +53,51 @@ function Tab({ config, saveConfig }: Props) {
   const activeLayout = activeTab?.layout;
 
   // Holds the state of actively dragging tabs as they relate to this Tab Panel
-  const [draggingTabState, setDraggingTabState] = useState<DraggingTabPanelState>({
+  const [draggingTabState] = useState<DraggingTabPanelState>({
     item: undefined,
     isOver: false,
   });
 
   // Create the actions used by the tab
-  const selectTab = useCallback(
-    (idx: number) => {
-      saveConfig({ activeTabIdx: idx });
-    },
-    [saveConfig],
-  );
-  const setTabTitle = useCallback(
-    (idx: number, title: string) => {
-      const newTabs = tabs.slice();
-      newTabs[idx] = { ...tabs[idx], title };
-      saveConfig({ tabs: newTabs });
-    },
-    [saveConfig, tabs],
-  );
-  const removeTab = useCallback(
-    (idx: number) => {
-      const newTabs = tabs.slice(0, idx).concat(tabs.slice(idx + 1));
-      const lastIdx = tabs.length - 1;
-      saveConfig({
-        tabs: newTabs,
-        activeTabIdx: activeTabIdx === lastIdx ? lastIdx - 1 : activeTabIdx,
-      });
-    },
-    [activeTabIdx, saveConfig, tabs],
-  );
-  const addTab = useCallback(() => {
-    const newTab = { title: `${tabs.length + 1}`, layout: undefined };
-    saveConfig({ ...config, activeTabIdx: tabs.length, tabs: tabs.concat([newTab]) });
-  }, [config, saveConfig, tabs]);
+  // const selectTab = useCallback(
+  //   (idx: number) => {
+  //     saveConfig({ activeTabIdx: idx });
+  //   },
+  //   [saveConfig],
+  // );
+  // const setTabTitle = useCallback(
+  //   (idx: number, title: string) => {
+  //     const newTabs = tabs.slice();
+  //     newTabs[idx] = { ...tabs[idx], title };
+  //     saveConfig({ tabs: newTabs });
+  //   },
+  //   [saveConfig, tabs],
+  // );
+  // const removeTab = useCallback(
+  //   (idx: number) => {
+  //     const newTabs = tabs.slice(0, idx).concat(tabs.slice(idx + 1));
+  //     const lastIdx = tabs.length - 1;
+  //     saveConfig({
+  //       tabs: newTabs,
+  //       activeTabIdx: activeTabIdx === lastIdx ? lastIdx - 1 : activeTabIdx,
+  //     });
+  //   },
+  //   [activeTabIdx, saveConfig, tabs],
+  // );
+  // const addTab = useCallback(() => {
+  //   const newTab = { title: `${tabs.length + 1}`, layout: undefined };
+  //   saveConfig({ ...config, activeTabIdx: tabs.length, tabs: tabs.concat([newTab]) });
+  // }, [config, saveConfig, tabs]);
   const onChangeLayout = useCallback(
     (layout: MosaicNode<string> | undefined) => {
       saveConfig(updateTabPanelLayout(layout, config));
     },
     [config, saveConfig],
   );
-  const actions = useMemo(
-    () => ({ addTab, removeTab, selectTab, setTabTitle }),
-    [addTab, removeTab, selectTab, setTabTitle],
-  );
+  // const actions = useMemo(
+  //   () => ({ addTab, removeTab, selectTab, setTabTitle }),
+  //   [addTab, removeTab, selectTab, setTabTitle],
+  // );
 
   // If the user drags the active tab out of the toolbar, we'll hide the
   // active layout in order to prevent tabs from dropping into child tabs.
@@ -110,13 +110,13 @@ function Tab({ config, saveConfig }: Props) {
 
   return (
     <Stack flex="auto" overflow="hidden">
-      <TabbedToolbar
+      {/* <TabbedToolbar
         panelId={panelId}
         tabs={tabs}
         actions={actions}
         activeTabIdx={activeTabIdx}
         setDraggingTabState={setDraggingTabState}
-      />
+      /> */}
       <Stack direction="row" flex="auto" overflow="hidden" position="relative">
         {activeLayout != undefined ? (
           <TabDndContext.Provider value={{ preventTabDrop }}>

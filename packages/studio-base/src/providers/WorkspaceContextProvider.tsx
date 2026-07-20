@@ -39,12 +39,12 @@ export function makeWorkspaceContextInitialState(): WorkspaceContextStore {
     sidebars: {
       left: {
         item: "panel-settings",
-        open: true,
+        open: false,
         size: undefined,
       },
       right: {
-        item: undefined,
-        open: false,
+        item: "studio-sensors",
+        open: true,
         size: undefined,
       },
     },

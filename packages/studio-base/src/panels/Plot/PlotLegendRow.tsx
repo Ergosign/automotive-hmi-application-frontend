@@ -15,8 +15,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { Immutable } from "@foxglove/studio";
 import { iterateTyped } from "@foxglove/studio-base/components/Chart/datasets";
-import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+// import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
+// import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHoverValue } from "@foxglove/studio-base/context/TimelineInteractionStateContext";
 import { useWorkspaceActions } from "@foxglove/studio-base/context/Workspace/useWorkspaceActions";
 import { plotPathDisplayName } from "@foxglove/studio-base/panels/Plot/types";
@@ -134,8 +134,8 @@ export function PlotLegendRow({
   showPlotValuesInLegend,
 }: PlotLegendRowProps): JSX.Element {
   const { openPanelSettings } = useWorkspaceActions();
-  const { id: panelId } = usePanelContext();
-  const { setSelectedPanelIds } = useSelectedPanels();
+  // const { id: panelId } = usePanelContext();
+  // const { setSelectedPanelIds } = useSelectedPanels();
   const { classes, cx } = useStyles();
 
   const correspondingData = useMemo(() => {
@@ -174,7 +174,7 @@ export function PlotLegendRow({
         [classes.showPlotValue]: showPlotValuesInLegend,
       })}
       onClick={() => {
-        setSelectedPanelIds([panelId]);
+        // setSelectedPanelIds([panelId]);
         openPanelSettings();
         onClickPath();
       }}

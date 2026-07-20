@@ -22,7 +22,7 @@ import { PanelCatalog, PanelSelection } from "@foxglove/studio-base/components/P
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
-import { getPanelIdForType } from "@foxglove/studio-base/util/layout";
+import { getPanelRandomIdForType } from "@foxglove/studio-base/util/layout";
 
 type Props = {
   tabId?: string;
@@ -72,7 +72,7 @@ export const EmptyPanelLayout = ({ tabId }: Props): JSX.Element => {
 
   const onPanelSelect = useCallback(
     ({ type, config, relatedConfigs }: PanelSelection) => {
-      const id = getPanelIdForType(type);
+      const id = getPanelRandomIdForType(type);
       addPanel({ tabId, id, config, relatedConfigs });
     },
     [addPanel, tabId],
